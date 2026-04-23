@@ -183,7 +183,12 @@
         if (!art) throw new Error("no art");
         return fetch(u(art.path));
       })
-      .then(function (r) { return r.text(); })
+      .then(function (r) {
+        if (!r || !r.ok) {
+          throw new Error("HTTP " + (r && r.status));
+        }
+        return r.text();
+      })
       .then(function (txt) {
         main.innerHTML =
           "<div class=paper><p class=paper-h>Press archive</p>" +
@@ -197,8 +202,11 @@
         setNewsSel();
         setHash();
       })
-      .catch(function () {
-        main.innerHTML = '<p class="arch-placeholder">无法加载该文。请从左侧重新选择或检查 data 是否已生成。</p>';
+      .catch(function (err) {
+        main.innerHTML =
+          '<p class="arch-placeholder">无法加载该文（' +
+          esc(String(err && err.message ? err.message : err)) +
+          "）。请确认以仓库根运行 http.server 且 <code>MC1/News Articles</code> 存在。</p>";
       });
   }
 
@@ -261,7 +269,7 @@
   }
 
   function applyHash() {
-    var h = (location.hash || "").replace(/^#/, "");
+    var h = (location.hash || "").replace(/^#/, "").replace(/^\//, "");
     if (h.indexOf("person/") === 0) {
       var nm = decodeURIComponent(h.slice(7));
       if (nm) {
