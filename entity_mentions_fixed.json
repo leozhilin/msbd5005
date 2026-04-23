@@ -1,0 +1,176 @@
+{
+  "The Light of Truth": {
+    "GAStech": 18,
+    "Government": 14,
+    "People": 13,
+    "POK": 1
+  },
+  "Modern Rubicon": {
+    "GAStech": 26,
+    "People": 4,
+    "Government": 9,
+    "POK": 2
+  },
+  "News Desk": {
+    "GAStech": 15,
+    "Government": 18,
+    "POK": 12,
+    "People": 6
+  },
+  "The General Post": {
+    "GAStech": 18,
+    "People": 13,
+    "Government": 14,
+    "POK": 3
+  },
+  "Central Bulletin": {
+    "POK": 13,
+    "Government": 15,
+    "GAStech": 13,
+    "People": 6
+  },
+  "Homeland Illumination": {
+    "Government": 29,
+    "GAStech": 33,
+    "POK": 25,
+    "People": 14
+  },
+  "News Online Today": {
+    "GAStech": 44,
+    "People": 29,
+    "Government": 57,
+    "POK": 48
+  },
+  "The Tulip": {
+    "GAStech": 18,
+    "POK": 2,
+    "Government": 14,
+    "People": 12
+  },
+  "Daily Pegasus": {
+    "GAStech": 11,
+    "POK": 16,
+    "Government": 22,
+    "People": 10
+  },
+  "The Orb": {
+    "GAStech": 11,
+    "POK": 15,
+    "Government": 22,
+    "People": 10
+  },
+  "The Continent": {
+    "GAStech": 10,
+    "POK": 7,
+    "Government": 11,
+    "People": 6
+  },
+  "World Journal": {
+    "GAStech": 10,
+    "POK": 7,
+    "People": 6,
+    "Government": 11
+  },
+  "World Source": {
+    "GAStech": 6,
+    "Government": 6,
+    "People": 5,
+    "POK": 4
+  },
+  "All News Today": {
+    "GAStech": 7,
+    "POK": 11,
+    "Government": 14,
+    "People": 6
+  },
+  "International News": {
+    "POK": 14,
+    "Government": 14,
+    "People": 6,
+    "GAStech": 8
+  },
+  "Centrum Sentinel": {
+    "GAStech": 20,
+    "Government": 8,
+    "POK": 2,
+    "People": 2
+  },
+  "The Truth": {
+    "Government": 21,
+    "POK": 17,
+    "People": 9,
+    "GAStech": 11
+  },
+  "Tethys News": {
+    "GAStech": 35,
+    "People": 5,
+    "Government": 4,
+    "POK": 3
+  },
+  "Athena Speaks": {
+    "POK": 12,
+    "Government": 18,
+    "GAStech": 15,
+    "People": 2
+  },
+  "International Times": {
+    "POK": 6,
+    "Government": 10,
+    "GAStech": 10,
+    "People": 7
+  },
+  "The Wrap": {
+    "POK": 14,
+    "Government": 22,
+    "GAStech": 11,
+    "People": 10
+  },
+  "The Guide": {
+    "Government": 20,
+    "GAStech": 11,
+    "POK": 17,
+    "People": 9
+  },
+  "The World": {
+    "GAStech": 16,
+    "Government": 12,
+    "POK": 3,
+    "People": 12
+  },
+  "Kronos Star": {
+    "Government": 24,
+    "GAStech": 45,
+    "POK": 22,
+    "People": 16
+  },
+  "Who What News": {
+    "GAStech": 14,
+    "Government": 10,
+    "People": 9,
+    "POK": 4
+  },
+  "Everyday News": {
+    "GAStech": 10,
+    "POK": 8,
+    "Government": 11,
+    "People": 6
+  },
+  "The Explainer": {
+    "GAStech": 15,
+    "POK": 15,
+    "Government": 17,
+    "People": 7
+  },
+  "The Abila Post": {
+    "GAStech": 40,
+    "Government": 26,
+    "People": 11,
+    "POK": 19
+  },
+  "Worldwise": {
+    "POK": 17,
+    "Government": 21,
+    "People": 9,
+    "GAStech": 11
+  }
+}

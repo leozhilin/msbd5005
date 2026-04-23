@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>统合档案室 · MC-1</title>
+  <link rel="stylesheet" href="css/cia-theme.css" />
+  <link rel="stylesheet" href="css/archive.css" />
+</head>
+<body>
+  <header class="site-nav">
+    <a href="index.html">← 总部</a>
+    <span class="sep">|</span>
+    <a href="archive.html" class="active">档案室</a>
+    <a href="task-a.html">A</a>
+    <a href="task-b.html">B</a>
+    <a href="task-c.html">C</a>
+  </header>
+
+  <p class="archive-top" style="font-size: 12px; color: var(--dim); max-width: 1400px; margin: 0 auto; padding: 0.4rem 1rem">
+    单页内切换人事 / 新闻：自动加载 <code>.docx</code> 正文（mammoth 转换）与內郵头记录（按姓名匹配 <code>first.last</code>）。需 HTTP 方式访问本目录。
+  </p>
+
+  <div class="archive-layout">
+    <aside class="archive-sidebar">
+      <div class="arch-tabs" role="tablist">
+        <button type="button" id="tab-person" class="active" role="tab" aria-selected="true">人事档案</button>
+        <button type="button" id="tab-news" role="tab" aria-selected="false">新闻分馆</button>
+      </div>
+      <div class="arch-list-wrap" id="list-person">
+        <ul class="arch-list" id="ul-persons"></ul>
+      </div>
+      <div class="arch-list-wrap" id="list-news" style="display: none">
+        <ul class="arch-list" id="ul-outlets"></ul>
+        <p
+          class="paper-h"
+          id="arch-art-h"
+          style="padding: 0.5rem 0.8rem; margin: 0; color: #6b7; font-size: 11px; display: none"
+        >
+          文章
+        </p>
+        <ul class="arch-list arch-sub" id="ul-art"></ul>
+      </div>
+    </aside>
+    <main class="archive-main" id="main-content">
+      <p class="arch-placeholder">载入中…</p>
+    </main>
+  </div>
+
+  <script src="js/archive.js"></script>
+</body>
+</html>

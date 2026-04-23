@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>任务 A · 新闻源特征</title>
+  <link rel="stylesheet" href="css/cia-theme.css" />
+  <script src="vendor/d3.v7.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/d3@7.9.0/dist/d3.min.js'"></script>
+</head>
+<body>
+  <header class="site-nav">
+    <a href="index.html">← 总部</a>
+    <a href="archive.html">档案室</a>
+    <span class="sep">|</span>
+    <a href="task-a.html" class="active">A</a>
+    <a href="task-b.html">B</a>
+    <a href="task-c.html">C</a>
+  </header>
+
+  <div class="container">
+    <div class="intel-header">
+      <h1 class="dossier-h1">TASK A / 新闻数据特征</h1>
+      <p class="mission-block" style="margin:0; border:0; padding:0">
+        依据 <code>timeline_data.json</code> 中索引的新闻记录统计各源发稿量；「同题共现」网络连接在同一归一化标题下共同出现的媒体对（可视为转载链或同题报道线索）。
+      </p>
+    </div>
+
+    <div class="panel">
+      <h2>各源报道量 (timeline 索引条数)</h2>
+      <div class="viz-wrap" id="bar-a" style="min-height:420px"></div>
+    </div>
+
+    <div class="panel">
+      <h2>同题多源共现 (衍生关系线索)</h2>
+      <div class="viz-wrap" id="net-a" style="min-height:500px"></div>
+      <p class="caption" id="cap-a"></p>
+    </div>
+  </div>
+
+  <script>
+  fetch("data/task_a.json")
+    .then(function (r) { return r.json(); })
+    .then(function (D) {
+      if (D.methodNote) document.getElementById("cap-a").textContent = D.methodNote;
+
+      var W = document.getElementById("bar-a").clientWidth || 800;
+      var m = { t: 20, r: 20, b: 120, l: 60 };
+      var data = D.barBySource;
+      var H = 400;
+      var x = d3.scaleBand()
+        .domain(data.map(function (d) { return d.source; }))
+        .range([0, W - m.l - m.r])
+        .padding(0.2);
+      var y = d3.scaleLinear()
+        .domain([0, d3.max(data, function (d) { return d.count; }) * 1.1])
+        .nice()
+        .range([H - m.t - m.b, 0]);
+
+      var svg = d3.select("#bar-a")
+        .append("svg")
+        .attr("width", W)
+        .attr("height", H);
+
+      var g = svg.append("g").attr("transform", "translate(" + m.l + "," + m.t + ")");
+
+      g.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(0," + (H - m.t - m.b) + ")")
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .style("text-anchor", "end")
+        .attr("dx", "-.6em")
+        .attr("dy", "0.3em")
+        .attr("transform", "rotate(-50)");
+
+      g.append("g")
+        .attr("class", "axis")
+        .call(d3.axisLeft(y).ticks(6));
+
+      g.selectAll("rect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", function (d) { return x(d.source); })
+        .attr("y", function (d) { return y(d.count); })
+        .attr("width", x.bandwidth())
+        .attr("height", function (d) { return (H - m.t - m.b) - y(d.count); })
+        .append("title")
+        .text(function (d) { return d.source + ": " + d.count; });
+
+      // --- 网络 ---
+      var sn = D.sameTitleCooccurrence;
+      var nodes = sn.nodes.map(function (id) { return { id: id }; });
+      var links = sn.links.map(function (l) {
+        return { source: l.source, target: l.target, value: l.weight };
+      });
+
+      var Wn = document.getElementById("net-a").clientWidth || 800;
+      var Hn = 500;
+      var svgN = d3.select("#net-a")
+        .append("svg")
+        .attr("width", Wn)
+        .attr("height", Hn);
+
+      var sim = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(function (d) { return d.id; }).distance(60))
+        .force("charge", d3.forceManyBody().strength(-220))
+        .force("center", d3.forceCenter(Wn / 2, Hn / 2))
+        .force("collide", d3.forceCollide(28));
+
+      var link = svgN.append("g")
+        .attr("stroke", "rgba(61,208,224,0.5)")
+        .attr("stroke-width", function (d) { return 1; })
+        .selectAll("line")
+        .data(links)
+        .enter()
+        .append("line")
+        .attr("stroke-width", function (d) { return Math.sqrt(d.value) * 0.4 + 0.3; });
+
+      var node = svgN.append("g")
+        .selectAll("g")
+        .data(nodes)
+        .enter()
+        .append("g")
+        .call(d3.drag()
+          .on("start", function (e, d) {
+            if (!e.active) sim.alphaTarget(0.2).restart();
+            d.fx = d.x; d.fy = d.y;
+          })
+          .on("drag", function (e, d) { d.fx = e.x; d.fy = e.y; })
+          .on("end", function (e, d) {
+            if (!e.active) sim.alphaTarget(0);
+            d.fx = null; d.fy = null;
+          }));
+
+      node.append("circle")
+        .attr("r", 10)
+        .attr("fill", "#0f1f18")
+        .attr("stroke", "#2ee46f")
+        .attr("stroke-width", 1.2);
+
+      node.append("text")
+        .text(function (d) { return d.id.length > 18 ? d.id.slice(0, 16) + "…" : d.id; })
+        .attr("font-size", 9)
+        .attr("fill", "#8ab")
+        .attr("dx", 12)
+        .attr("dy", 3);
+
+      sim.on("tick", function () {
+        link
+          .attr("x1", function (d) { return d.source.x; })
+          .attr("y1", function (d) { return d.source.y; })
+          .attr("x2", function (d) { return d.target.x; })
+          .attr("y2", function (d) { return d.target.y; });
+        node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
+      });
+    });
+  </script>
+</body>
+</html>

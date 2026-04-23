@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>任务 C · 关系网</title>
+  <link rel="stylesheet" href="css/cia-theme.css" />
+  <script src="vendor/d3.v7.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/d3@7.9.0/dist/d3.min.js'"></script>
+</head>
+<body>
+  <header class="site-nav">
+    <a href="index.html">← 总部</a>
+    <a href="archive.html">档案室</a>
+    <span class="sep">|</span>
+    <a href="task-a.html">A</a>
+    <a href="task-b.html">B</a>
+    <a href="task-c.html" class="active">C</a>
+  </header>
+
+  <div class="container">
+    <div class="intel-header">
+      <h1 class="dossier-h1">TASK C / 组织与个人关系 (分析图 + 通信)</h1>
+      <p class="mission-block" style="margin:0; border:0; padding:0">
+        左：基于仓库内 <code>relationship_data.json</code> 的关系边（正式/非正式/冲突/地理），用于对应书面分析中的组织叙事。<br />
+        右：基于 <code>email_network.json</code> 邮件头聚合的<strong>高权重子集</strong>，节点为 54 名员工；边宽 ∝ 通信次数。
+      </p>
+    </div>
+
+    <p class="caption" style="border:none; padding:0; margin:0 0 1rem">
+      左图线色：<span style="color:#2ee46f">■</span> 正式 &nbsp;
+      <span style="color:#e4b12e">■</span> 非正式 &nbsp;
+      <span style="color:#e45555">■</span> 冲突 &nbsp;
+      <span style="color:#3dd0e0">■</span> 地理/属地
+    </p>
+    <div class="panel two-col">
+      <div>
+        <h2>分析关系图 (GAStech / POK / 政府等)</h2>
+        <div class="viz-wrap" id="viz-rel" style="min-height:400px"></div>
+      </div>
+      <div>
+        <h2>内部邮件通信 (Top 边)</h2>
+        <p class="caption" id="em-note" style="border:0; padding:0; margin:0 0 0.5rem"></p>
+        <div class="viz-wrap" id="viz-em" style="min-height:400px"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  var edgeColor = {
+    official: "#2ee46f",
+    unofficial: "#e4b12e",
+    conflict: "#e45555",
+    location: "#3dd0e0"
+  };
+
+  function runForce(containerId, nodes, links, rScale) {
+    var W = document.getElementById(containerId).clientWidth || 500;
+    var H = 400;
+    var svg = d3.select("#" + containerId)
+      .append("svg")
+      .attr("width", W)
+      .attr("height", H);
+
+    var sim = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links).id(function (d) { return d.id; }).distance(70))
+      .force("charge", d3.forceManyBody().strength(-200))
+      .force("center", d3.forceCenter(W / 2, H / 2))
+      .force("collide", d3.forceCollide(22));
+
+    var link = svg.append("g")
+      .attr("stroke-opacity", 0.7)
+      .selectAll("line")
+      .data(links)
+      .enter()
+      .append("line")
+      .attr("stroke", function (d) { return d.c || "#555"; })
+      .attr("stroke-width", rScale ? function (d) { return rScale(d); } : 1.5);
+
+    var node = svg.append("g")
+      .selectAll("g")
+      .data(nodes)
+      .enter()
+      .append("g")
+      .call(d3.drag()
+        .on("start", function (e, d) {
+          if (!e.active) sim.alphaTarget(0.25).restart();
+          d.fx = d.x; d.fy = d.y;
+        })
+        .on("drag", function (e, d) { d.fx = e.x; d.fy = e.y; })
+        .on("end", function (e, d) {
+          if (!e.active) sim.alphaTarget(0);
+          d.fx = null; d.fy = null;
+        }));
+
+    node.append("circle")
+      .attr("r", function (d) { return d.r || 11; })
+      .attr("fill", function (d) { return d.col || "#1a2a1f"; })
+      .attr("stroke", "#6b7a88")
+      .attr("stroke-width", 0.6);
+
+    node.append("text")
+      .text(function (d) {
+        var s = d.id;
+        return s.length > 14 ? s.slice(0, 12) + "…" : s;
+      })
+      .attr("font-size", 9)
+      .attr("fill", "#aab")
+      .attr("dx", 14)
+      .attr("dy", 3);
+
+    sim.on("tick", function () {
+      link
+        .attr("x1", function (d) { return d.source.x; })
+        .attr("y1", function (d) { return d.source.y; })
+        .attr("x2", function (d) { return d.target.x; })
+        .attr("y2", function (d) { return d.target.y; });
+      node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
+    });
+  }
+
+  fetch("data/task_c.json")
+    .then(function (r) { return r.json(); })
+    .then(function (D) {
+      var A = D.analystGraph;
+      var nlist = Object.keys(A.nodes).map(function (id) {
+        var t = (A.nodes[id] && A.nodes[id].type) || "other";
+        var col = { person: "#2a3d4e", organization: "#1e4d2e", location: "#1a3a4a" }[t] || "#333";
+        return { id: id, t: t, col: col, r: t === "organization" ? 14 : 11 };
+      });
+      var llist = (A.edges || []).map(function (e) {
+        return {
+          source: e.source,
+          target: e.target,
+          c: edgeColor[e.type] || "#666"
+        };
+      });
+      runForce("viz-rel", nlist, llist, null);
+
+      var N = D.emailNetwork;
+      document.getElementById("em-note").textContent = (N.displayNote || "") + " 全边 " + (N.linksTotal || 0) + " 条。";
+      var enodes = N.nodes.map(function (id) { return { id: id, col: "#223344", r: 8 }; });
+      var mx = d3.max(N.links, function (d) { return d.weight; }) || 1;
+      var wscale = d3.scaleLinear().domain([1, mx]).range([0.3, 4]);
+      var elinks = N.links.map(function (e) {
+        return { source: e.source, target: e.target, c: "rgba(228,85,85,0.45)", w: wscale(e.weight) };
+      });
+      // 覆盖 runForce 的 stroke
+      d3.select("#viz-em").selectAll("svg").remove();
+      var W = document.getElementById("viz-em").clientWidth || 500;
+      var H = 400;
+      var svg = d3.select("#viz-em")
+        .append("svg")
+        .attr("width", W)
+        .attr("height", H);
+      var sim2 = d3.forceSimulation(enodes)
+        .force("link", d3.forceLink(elinks).id(function (d) { return d.id; }).distance(35))
+        .force("charge", d3.forceManyBody().strength(-90))
+        .force("center", d3.forceCenter(W / 2, H / 2))
+        .force("collide", d3.forceCollide(12));
+      var link2 = svg.append("g")
+        .selectAll("line")
+        .data(elinks)
+        .enter()
+        .append("line")
+        .attr("stroke", function (d) { return d.c; })
+        .attr("stroke-width", function (d) { return d.w; });
+      var node2 = svg.append("g")
+        .selectAll("g")
+        .data(enodes)
+        .enter()
+        .append("g")
+        .call(d3.drag()
+        .on("start", function (e, d) {
+          if (!e.active) sim2.alphaTarget(0.2).restart();
+          d.fx = d.x; d.fy = d.y;
+        })
+        .on("drag", function (e, d) { d.fx = e.x; d.fy = e.y; })
+        .on("end", function (e, d) {
+          if (!e.active) sim2.alphaTarget(0);
+          d.fx = null; d.fy = null;
+        }));
+      node2.append("circle")
+        .attr("r", 6)
+        .attr("fill", "#182630")
+        .attr("stroke", "#e4b12e");
+      node2.append("text")
+        .text(function (d) {
+          var s = d.id;
+          return s.length > 12 ? s.slice(0, 10) + "…" : s;
+        })
+        .attr("font-size", 8)
+        .attr("fill", "#7a8")
+        .attr("dx", 8)
+        .attr("dy", 2);
+      sim2.on("tick", function () {
+        link2
+          .attr("x1", function (d) { return d.source.x; })
+          .attr("y1", function (d) { return d.source.y; })
+          .attr("x2", function (d) { return d.target.x; })
+          .attr("y2", function (d) { return d.target.y; });
+        node2.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
+      });
+    });
+  </script>
+</body>
+</html>

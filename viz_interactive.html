@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAST Challenge 2021 MC1 - Interactive Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #aaa;
+            font-size: 14px;
+        }
+        .container {
+            display: flex;
+            height: calc(100vh - 100px);
+        }
+        .sidebar {
+            width: 300px;
+            background: #16213e;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            position: relative;
+        }
+        .viz-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            background: #0f3460;
+            border: none;
+            color: #eee;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        .tab-btn:hover, .tab-btn.active {
+            background: #e94560;
+        }
+        .viz-container {
+            background: #16213e;
+            border-radius: 10px;
+            height: calc(100% - 60px);
+            position: relative;
+            overflow: hidden;
+        }
+        .node {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .node:hover {
+            filter: brightness(1.3);
+        }
+        .link {
+            stroke-opacity: 0.6;
+            transition: all 0.3s;
+        }
+        .tooltip {
+            position: absolute;
+            padding: 10px;
+            background: rgba(0,0,0,0.9);
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 12px;
+            max-width: 250px;
+            border: 1px solid #e94560;
+        }
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(22, 33, 62, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #0f3460;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .stats-card {
+            background: #0f3460;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .stats-card h3 {
+            font-size: 14px;
+            color: #e94560;
+            margin-bottom: 10px;
+        }
+        .stats-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .filter-group {
+            margin: 15px 0;
+        }
+        .filter-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #aaa;
+        }
+        .filter-group select, .filter-group input {
+            width: 100%;
+            padding: 8px;
+            background: #1a1a2e;
+            border: 1px solid #0f3460;
+            color: #eee;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 VAST Challenge 2021: Mini-Challenge 1</h1>
+        <p>Visual Analytics for Complex Relationship Discovery | GAStech Kidnapping Investigation</p>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="stats-card">
+                <h3>📊 Data Overview</h3>
+                <div class="stats-value">1,175</div>
+                <div style="font-size: 12px; color: #aaa;">Email Records</div>
+            </div>
+            <div class="stats-card">
+                <h3>📰 News Articles</h3>
+                <div class="stats-value">845</div>
+                <div style="font-size: 12px; color: #aaa;">From 29 Sources</div>
+            </div>
+            <div class="stats-card">
+                <h3>👥 Employees</h3>
+                <div class="stats-value">55</div>
+                <div style="font-size: 12px; color: #aaa;">With Resumes</div>
+            </div>
+            
+            <div class="filter-group">
+                <label>Relationship Type</label>
+                <select id="relationFilter">
+                    <option value="all">All Relationships</option>
+                    <option value="official">Official Only</option>
+                    <option value="unofficial">Unofficial Only</option>
+                    <option value="conflict">Conflicts Only</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Organization</label>
+                <select id="orgFilter">
+                    <option value="all">All Organizations</option>
+                    <option value="GAStech">GAStech</option>
+                    <option value="POK">POK</option>
+                    <option value="Government">Government</option>
+                </select>
+            </div>
+            
+            <div class="stats-card">
+                <h3>🔎 Key Insights</h3>
+                <ul style="font-size: 12px; line-height: 1.8; padding-left: 15px;">
+                    <li>Mat Bramar is the most active email communicator (1,355 emails)</li>
+                    <li>GAStech IPO occurred in Dec 2013</li>
+                    <li>POK labeled as "public threat" by government</li>
+                    <li>Elian Karel's death (2009) may be connected to current events</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="viz-tabs">
+                <button class="tab-btn active" onclick="switchTab('network')">Relationship Network</button>
+                <button class="tab-btn" onclick="switchTab('timeline')">Event Timeline</button>
+                <button class="tab-btn" onclick="switchTab('bias')">Source Bias</button>
+            </div>
+            
+            <div class="viz-container" id="viz-container">
+                <!-- D3 visualization will be rendered here -->
+            </div>
+            
+            <div class="legend" id="legend">
+                <!-- Legend will be populated by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="tooltip" id="tooltip" style="display: none;"></div>
+
+    <script>
+        // Sample data - in real implementation, load from JSON files
+        const networkData = {
+            nodes: [
+                // GAStech Executives
+                {id: "Sten Sanjorge Jr", group: "GAStech", level: "executive", type: "person"},
+                {id: "Ingrid Barranco", group: "GAStech", level: "executive", type: "person"},
+                {id: "Ada Campo", group: "GAStech", level: "executive", type: "person"},
+                {id: "Orhan Strum", group: "GAStech", level: "executive", type: "person"},
+                {id: "Willem Vasco", group: "GAStech", level: "executive", type: "person"},
+                
+                // Active Employees
+                {id: "Mat Bramar", group: "GAStech", level: "employee", type: "person"},
+                {id: "Ruscella Mies", group: "GAStech", level: "employee", type: "person"},
+                {id: "Lucas Alcazar", group: "GAStech", level: "employee", type: "person"},
+                {id: "Henk Mies", group: "GAStech", level: "employee", type: "person"},
+                
+                // Organizations
+                {id: "GAStech", group: "org", type: "organization"},
+                {id: "POK", group: "org", type: "organization"},
+                {id: "Kronos Government", group: "org", type: "organization"},
+                
+                // Locations
+                {id: "Kronos", group: "location", type: "location"},
+                {id: "Tethys", group: "location", type: "location"},
+            ],
+            links: [
+                // Official relations
+                {source: "Sten Sanjorge Jr", target: "GAStech", type: "official", relation: "CEO"},
+                {source: "Ingrid Barranco", target: "GAStech", type: "official", relation: "CFO"},
+                {source: "Ada Campo", target: "GAStech", type: "official", relation: "CIO"},
+                {source: "Orhan Strum", target: "GAStech", type: "official", relation: "Exec"},
+                {source: "Willem Vasco", target: "GAStech", type: "official", relation: "Safety Advisor"},
+                {source: "Mat Bramar", target: "GAStech", type: "official", relation: "Employee"},
+                {source: "Ruscella Mies", target: "GAStech", type: "official", relation: "Employee"},
+                {source: "Lucas Alcazar", target: "GAStech", type: "official", relation: "Employee"},
+                {source: "GAStech", target: "Kronos Government", type: "official", relation: "Partnership"},
+                
+                // Unofficial (from email analysis)
+                {source: "Mat Bramar", target: "Ruscella Mies", type: "unofficial", relation: "Frequent Contact"},
+                {source: "Lucas Alcazar", target: "Henk Mies", type: "unofficial", relation: "Frequent Contact"},
+                
+                // Conflicts
+                {source: "POK", target: "GAStech", type: "conflict", relation: "Opposes"},
+                {source: "POK", target: "Kronos Government", type: "conflict", relation: "Labeled Threat"},
+                
+                // Locations
+                {source: "GAStech", target: "Kronos", type: "location", relation: "Operates in"},
+                {source: "GAStech", target: "Tethys", type: "location", relation: "HQ"},
+            ]
+        };
+
+        const timelineData = [
+            {date: "2005-04", event: "POK Protest Arrests", source: "All News Today", importance: 3},
+            {date: "2009-06", event: "Elian Karel Death", source: "Multiple", importance: 5},
+            {date: "2013-12", event: "GAStech IPO", source: "The Light of Truth", importance: 5},
+            {date: "2014-01", event: "Employee Kidnapping", source: "Multiple", importance: 5},
+        ];
+
+        let currentTab = 'network';
+        let simulation;
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderVisualization();
+        }
+
+        function renderVisualization() {
+            const container = document.getElementById('viz-container');
+            container.innerHTML = '';
+            
+            if (currentTab === 'network') {
+                renderNetwork(container);
+            } else if (currentTab === 'timeline') {
+                renderTimeline(container);
+            } else if (currentTab === 'bias') {
+                renderBias(container);
+            }
+        }
+
+        function renderNetwork(container) {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            const svg = d3.select(container)
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            const colorScale = {
+                'GAStech': '#3498db',
+                'org': '#e74c3c',
+                'location': '#2ecc71'
+            };
+
+            const linkColors = {
+                'official': '#27ae60',
+                'unofficial': '#f39c12',
+                'conflict': '#e74c3c',
+                'location': '#9b59b6'
+            };
+
+            // Filter data
+            const filterType = document.getElementById('relationFilter').value;
+            let filteredLinks = networkData.links;
+            if (filterType !== 'all') {
+                filteredLinks = networkData.links.filter(l => l.type === filterType);
+            }
+
+            simulation = d3.forceSimulation(networkData.nodes)
+                .force('link', d3.forceLink(filteredLinks).id(d => d.id).distance(100))
+                .force('charge', d3.forceManyBody().strength(-300))
+                .force('center', d3.forceCenter(width / 2, height / 2));
+
+            const link = svg.append('g')
+                .selectAll('line')
+                .data(filteredLinks)
+                .join('line')
+                .attr('class', 'link')
+                .attr('stroke', d => linkColors[d.type] || '#999')
+                .attr('stroke-width', d => d.type === 'conflict' ? 3 : 1.5)
+                .attr('stroke-dasharray', d => d.type === 'unofficial' ? '5,5' : null);
+
+            const node = svg.append('g')
+                .selectAll('g')
+                .data(networkData.nodes)
+                .join('g')
+                .attr('class', 'node')
+                .call(d3.drag()
+                    .on('start', dragstarted)
+                    .on('drag', dragged)
+                    .on('end', dragended));
+
+            node.append('circle')
+                .attr('r', d => d.level === 'executive' ? 25 : (d.type === 'organization' ? 30 : 15))
+                .attr('fill', d => colorScale[d.group] || '#95a5a6')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 2);
+
+            node.append('text')
+                .text(d => d.id)
+                .attr('x', 0)
+                .attr('y', d => d.level === 'executive' || d.type === 'organization' ? 40 : 25)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#fff')
+                .attr('font-size', '10px');
+
+            // Tooltip
+            const tooltip = document.getElementById('tooltip');
+            node.on('mouseover', function(event, d) {
+                tooltip.style.display = 'block';
+                tooltip.innerHTML = `
+                    <strong>${d.id}</strong><br>
+                    Type: ${d.type}<br>
+                    ${d.group !== 'org' && d.group !== 'location' ? `Group: ${d.group}<br>` : ''}
+                    ${d.level ? `Level: ${d.level}<br>` : ''}
+                `;
+            })
+            .on('mousemove', function(event) {
+                tooltip.style.left = (event.pageX + 10) + 'px';
+                tooltip.style.top = (event.pageY + 10) + 'px';
+            })
+            .on('mouseout', function() {
+                tooltip.style.display = 'none';
+            });
+
+            simulation.on('tick', () => {
+                link
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y);
+
+                node.attr('transform', d => `translate(${d.x},${d.y})`);
+            });
+
+            // Update legend
+            document.getElementById('legend').innerHTML = `
+                <div class="legend-item"><div class="legend-color" style="background:#3498db"></div>GAStech Personnel</div>
+                <div class="legend-item"><div class="legend-color" style="background:#e74c3c"></div>Organization</div>
+                <div class="legend-item"><div class="legend-color" style="background:#2ecc71"></div>Location</div>
+                <hr style="border-color:#0f3460; margin:10px 0;">
+                <div class="legend-item"><span style="color:#27ae60; margin-right:10px;">━━</span>Official Relation</div>
+                <div class="legend-item"><span style="color:#f39c12; margin-right:10px;">- -</span>Unofficial Relation</div>
+                <div class="legend-item"><span style="color:#e74c3c; margin-right:10px;">━━</span>Conflict</div>
+            `;
+        }
+
+        function renderTimeline(container) {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            const svg = d3.select(container)
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            const margin = {top: 50, right: 50, bottom: 50, left: 100};
+            const innerWidth = width - margin.left - margin.right;
+            const innerHeight = height - margin.top - margin.bottom;
+
+            const g = svg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Parse dates
+            const parseDate = d3.timeParse("%Y-%m");
+            timelineData.forEach(d => d.parsedDate = parseDate(d.date));
+
+            const xScale = d3.scaleTime()
+                .domain(d3.extent(timelineData, d => d.parsedDate))
+                .range([0, innerWidth]);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, 6])
+                .range([innerHeight, 0]);
+
+            // Timeline axis
+            g.append('g')
+                .attr('transform', `translate(0,${innerHeight})`)
+                .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%Y-%m")))
+                .selectAll('text')
+                .attr('fill', '#fff');
+
+            g.selectAll('.domain, .tick line').attr('stroke', '#555');
+
+            // Events
+            const events = g.selectAll('.event')
+                .data(timelineData)
+                .join('g')
+                .attr('class', 'event')
+                .attr('transform', d => `translate(${xScale(d.parsedDate)},${yScale(d.importance)})`);
+
+            events.append('circle')
+                .attr('r', d => d.importance * 4)
+                .attr('fill', d => d.importance === 5 ? '#e74c3c' : '#3498db')
+                .attr('opacity', 0.8);
+
+            events.append('text')
+                .text(d => d.event)
+                .attr('y', -15)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#fff')
+                .attr('font-size', '11px');
+
+            // Title
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', 25)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#fff')
+                .attr('font-size', '16px')
+                .attr('font-weight', 'bold')
+                .text('Key Events Timeline (2005-2014)');
+
+            document.getElementById('legend').innerHTML = `
+                <div class="legend-item"><div class="legend-color" style="background:#e74c3c"></div>Critical Event</div>
+                <div class="legend-item"><div class="legend-color" style="background:#3498db"></div>Important Event</div>
+            `;
+        }
+
+        function renderBias(container) {
+            container.innerHTML = `
+                <div style="padding: 40px; text-align: center;">
+                    <h3 style="color: #e94560; margin-bottom: 20px;">News Source Bias Analysis</h3>
+                    <p style="color: #aaa; max-width: 600px; margin: 0 auto;">
+                        This view would display a heatmap or matrix visualization showing how different 
+                        news sources (Kronos Star, The Abila Post, Modern Rubicon, etc.) mention 
+                        GAStech, POK, and Government with different frequencies and sentiment.
+                    </p>
+                    <div style="margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                        <div style="background: #0f3460; padding: 20px; border-radius: 8px;">
+                            <h4 style="color: #e94560;">Kronos Star</h4>
+                            <p style="font-size: 12px; color: #aaa;">Local Kronos news<br>Pro-Government stance<br>Frequent POK criticism</p>
+                        </div>
+                        <div style="background: #0f3460; padding: 20px; border-radius: 8px;">
+                            <h4 style="color: #e94560;">The Abila Post</h4>
+                            <p style="font-size: 12px; color: #aaa;">Local Abila news<br>Environmental focus<br>Critical of GAStech</p>
+                        </div>
+                        <div style="background: #0f3460; padding: 20px; border-radius: 8px;">
+                            <h4 style="color: #e94560;">Tethys News</h4>
+                            <p style="font-size: 12px; color: #aaa;">International coverage<br>GAStech IPO focus<br>Business perspective</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('legend').innerHTML = '';
+        }
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+
+        // Initialize
+        renderVisualization();
+
+        // Handle filter changes
+        document.getElementById('relationFilter').addEventListener('change', renderVisualization);
+        document.getElementById('orgFilter').addEventListener('change', renderVisualization);
+    </script>
+</body>
+</html>

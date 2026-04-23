@@ -1,0 +1,330 @@
+/* VAST MC1 情报台 — 暗色终端 / 机密文档风格 */
+:root {
+  --bg: #0b0d10;
+  --bg-panel: #11141a;
+  --border: #1e2a35;
+  --text: #c4d0dc;
+  --dim: #6b7a88;
+  --accent: #2ee46f;
+  --warn: #e4b12e;
+  --alert: #e45555;
+  --cyan: #3dd0e0;
+  --font-m: "Consolas", "Sarasa Mono SC", "Noto Sans SC", "PingFang SC", monospace;
+  --font-s: "Segoe UI", "Noto Sans SC", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-s);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+body {
+  background-image:
+    linear-gradient(rgba(46, 228, 111, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46, 228, 111, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* 轻量扫描线，避免持续重绘拖慢低配机 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 3px
+  );
+  z-index: 9999;
+  opacity: 0.18;
+}
+
+a { color: var(--cyan); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  padding: 0.9rem 1.5rem;
+  background: linear-gradient(180deg, #141820 0%, #0d1015 100%);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-m);
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.site-nav a {
+  color: var(--accent);
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid transparent;
+}
+.site-nav a:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+}
+.site-nav .sep { color: var(--dim); }
+.site-nav .active {
+  color: #fff;
+  border-bottom: 2px solid var(--accent);
+}
+
+.badge-classified {
+  display: inline-block;
+  font-family: var(--font-m);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--alert);
+  border: 1px solid var(--alert);
+  padding: 0.2rem 0.6rem;
+  animation: stamp-pulse 3s ease-in-out infinite;
+}
+
+@keyframes stamp-pulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.55; }
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.intel-header {
+  border: 1px solid var(--border);
+  background: var(--bg-panel);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 40px rgba(46, 228, 111, 0.06);
+  animation: panel-in 0.6s ease-out;
+}
+
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dossier-h1 {
+  font-family: var(--font-m);
+  font-size: 1.1rem;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+}
+
+.intel-header h1.title-lg {
+  font-size: 1.45rem;
+  color: #fff;
+  font-weight: 600;
+  margin: 0.25rem 0 0.75rem 0;
+  letter-spacing: 0.02em;
+}
+
+.meta-row {
+  font-family: var(--font-m);
+  font-size: 12px;
+  color: var(--dim);
+}
+.meta-row span { margin-right: 1.5rem; }
+
+.mission-block {
+  border-left: 3px solid var(--accent);
+  padding-left: 1rem;
+  margin: 1.25rem 0;
+  color: #dfe8ef;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  background: #0d1015;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.panel h2 {
+  font-family: var(--font-m);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--warn);
+  margin: 0 0 1rem 0;
+}
+
+.deck-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.big-btn {
+  display: block;
+  padding: 1.4rem 1.25rem;
+  text-align: center;
+  font-family: var(--font-m);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #fff;
+  background: linear-gradient(145deg, #1a222d, #0f1418);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  animation: panel-in 0.5s ease-out backwards;
+}
+.big-btn:hover {
+  text-decoration: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(46, 228, 111, 0.15);
+  transform: translateY(-2px);
+}
+.big-btn.t-a { border-left: 4px solid var(--cyan); animation-delay: 0.1s; }
+.big-btn.t-b { border-left: 4px solid var(--warn); animation-delay: 0.2s; }
+.big-btn.t-c { border-left: 4px solid var(--alert); animation-delay: 0.3s; }
+.big-btn small {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0.05em;
+  color: var(--dim);
+  line-height: 1.4;
+}
+
+/* 人事档案卡 */
+.dossier-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 0.25rem;
+}
+
+.dossier-card {
+  font-family: var(--font-m);
+  font-size: 12px;
+  background: #12151c;
+  border: 1px solid #242d38;
+  padding: 0.75rem 0.9rem;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.dossier-card::before {
+  content: "████ DOSSIER";
+  display: block;
+  color: #3a4a58;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.4rem;
+}
+.dossier-card:hover {
+  border-color: var(--accent);
+}
+.dossier-card a.main {
+  color: #fff;
+  display: block;
+  font-size: 13px;
+  margin-bottom: 0.35rem;
+}
+.dossier-card a.dl {
+  color: var(--dim);
+  font-size: 11px;
+}
+.dossier-card a.dl:hover { color: var(--accent); }
+
+/* 新闻分馆 */
+.outlet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.6rem;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.outlet-tile {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  background: #10141a;
+  border: 1px solid #1f2833;
+  color: var(--text);
+  font-size: 13px;
+  text-decoration: none;
+  transition: border-color 0.2s;
+}
+.outlet-tile:hover { border-color: var(--warn); text-decoration: none; color: #fff; }
+.outlet-tile .ct { color: var(--dim); font-size: 11px; margin-top: 0.2rem; }
+
+/* 任务页图表容器 */
+.viz-wrap {
+  width: 100%;
+  min-height: 360px;
+  background: #080a0c;
+  border: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.viz-wrap svg { display: block; }
+.viz-legend { font-size: 11px; color: var(--dim); margin-top: 0.5rem; }
+.task-intro { color: #aebcc8; font-size: 14px; margin-bottom: 1rem; }
+
+.axis text { fill: var(--dim); font-size: 10px; }
+.axis path, .axis line { stroke: #2a3845; }
+.bar { fill: #3dd0e0; transition: fill 0.2s; }
+.bar:hover { fill: var(--accent); }
+
+.caption {
+  font-family: var(--font-m);
+  font-size: 12px;
+  color: var(--dim);
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+.err-box {
+  background: #2a1212;
+  border: 1px solid #633;
+  color: #faa;
+  padding: 0.75rem;
+  font-size: 13px;
+  display: none;
+}
+
+.wc-bubble {
+  display: inline-block;
+  margin: 0.2rem 0.35rem;
+  color: #cde;
+  font-family: var(--font-m);
+  line-height: 1.2;
+  vertical-align: middle;
+  animation: wc-pop 0.5s ease-out backwards;
+}
+@keyframes wc-pop {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 800px) {
+  .two-col { grid-template-columns: 1fr; }
+}

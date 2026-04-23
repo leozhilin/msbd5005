@@ -1,0 +1,156 @@
+{
+  "nodes": {
+    "Sten Sanjorge Jr": {
+      "type": "person",
+      "org": "GAStech",
+      "level": "executive"
+    },
+    "Ingrid Barranco": {
+      "type": "person",
+      "org": "GAStech",
+      "level": "executive"
+    },
+    "Ada Campo": {
+      "type": "person",
+      "org": "GAStech",
+      "level": "executive"
+    },
+    "Orhan Strum": {
+      "type": "person",
+      "org": "GAStech",
+      "level": "executive"
+    },
+    "Willem Vasco": {
+      "type": "person",
+      "org": "GAStech",
+      "level": "executive"
+    },
+    "Mat Bramar": {
+      "type": "person",
+      "org": "GAStech",
+      "level": "employee"
+    },
+    "Ruscella Mies": {
+      "type": "person",
+      "org": "GAStech",
+      "level": "employee"
+    },
+    "Lucas Alcazar": {
+      "type": "person",
+      "org": "GAStech",
+      "level": "employee"
+    },
+    "Henk Mies": {
+      "type": "person",
+      "org": "GAStech",
+      "level": "employee"
+    },
+    "GAStech": {
+      "type": "organization",
+      "sector": "company"
+    },
+    "POK": {
+      "type": "organization",
+      "sector": "activist"
+    },
+    "Kronos Government": {
+      "type": "organization",
+      "sector": "government"
+    },
+    "APA": {
+      "type": "organization",
+      "sector": "activist"
+    },
+    "Kronos": {
+      "type": "location"
+    },
+    "Tethys": {
+      "type": "location"
+    },
+    "Abila": {
+      "type": "location"
+    }
+  },
+  "edges": [
+    {
+      "source": "Sten Sanjorge Jr",
+      "target": "GAStech",
+      "relation": "CEO",
+      "type": "official"
+    },
+    {
+      "source": "Ingrid Barranco",
+      "target": "GAStech",
+      "relation": "CFO",
+      "type": "official"
+    },
+    {
+      "source": "Ada Campo",
+      "target": "GAStech",
+      "relation": "CIO",
+      "type": "official"
+    },
+    {
+      "source": "Orhan Strum",
+      "target": "GAStech",
+      "relation": " executive",
+      "type": "official"
+    },
+    {
+      "source": "Willem Vasco",
+      "target": "GAStech",
+      "relation": "Safety Advisor",
+      "type": "official"
+    },
+    {
+      "source": "GAStech",
+      "target": "Kronos Government",
+      "relation": "partnership",
+      "type": "official"
+    },
+    {
+      "source": "Mat Bramar",
+      "target": "Ruscella Mies",
+      "relation": "frequent_comm",
+      "type": "unofficial",
+      "weight": 50
+    },
+    {
+      "source": "Lucas Alcazar",
+      "target": "Henk Mies",
+      "relation": "frequent_comm",
+      "type": "unofficial",
+      "weight": 30
+    },
+    {
+      "source": "POK",
+      "target": "GAStech",
+      "relation": "opposes",
+      "type": "conflict"
+    },
+    {
+      "source": "POK",
+      "target": "Kronos Government",
+      "relation": "labeled threat",
+      "type": "conflict"
+    },
+    {
+      "source": "GAStech",
+      "target": "Kronos",
+      "relation": "operates in",
+      "type": "location"
+    },
+    {
+      "source": "GAStech",
+      "target": "Tethys",
+      "relation": "headquartered",
+      "type": "location"
+    },
+    {
+      "source": "POK",
+      "target": "Abila",
+      "relation": "active in",
+      "type": "location"
+    }
+  ]
+}

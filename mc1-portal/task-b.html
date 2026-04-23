@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>任务 B · 媒体偏见线索</title>
+  <link rel="stylesheet" href="css/cia-theme.css" />
+  <script src="vendor/d3.v7.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/d3@7.9.0/dist/d3.min.js'"></script>
+</head>
+<body>
+  <header class="site-nav">
+    <a href="index.html">← 总部</a>
+    <a href="archive.html">档案室</a>
+    <span class="sep">|</span>
+    <a href="task-a.html">A</a>
+    <a href="task-b.html" class="active">B</a>
+    <a href="task-c.html">C</a>
+  </header>
+
+  <div class="container">
+    <div class="intel-header">
+      <h1 class="dossier-h1">TASK B / 实体呈现相对比例</h1>
+      <p class="mission-block" style="margin:0; border:0; padding:0">
+        热力图：基于 <code>entity_mentions_fixed.json</code> 中各媒体对实体类的提及次数，按媒体<strong>行内归一化</strong>，便于比较「在自家稿件里 POK/GAStech/政府/人物」的相对强调（非绝对发稿量对比）。<br />
+        词云：对 <code>MC1/News Articles</code> 全量 .txt 正文分词（已跳过元数据行），仅作高频主题线索，须结合具体报道阅读。
+      </p>
+    </div>
+
+    <div class="panel two-col" style="display:block">
+      <h2 style="margin-top:0">归一化热力图</h2>
+      <div class="viz-wrap" id="heat-b" style="min-height:480px; margin-bottom:1rem"></div>
+    </div>
+
+    <div class="panel">
+      <h2>报道正文高频词 (词云)</h2>
+      <div class="viz-wrap" id="wc-b" style="min-height:300px; padding:1rem; overflow:hidden"></div>
+    </div>
+  </div>
+
+  <script>
+  fetch("data/task_b.json")
+    .then(function (r) { return r.json(); })
+    .then(function (D) {
+      var keys = ["POK", "GAStech", "Government", "People"];
+      var rows = D.normalizedHeatmap;
+      var W = document.getElementById("heat-b").clientWidth || 800;
+      var m = { t: 40, r: 30, b: 40, l: 200 };
+      var cellW = (W - m.l - m.r) / keys.length;
+      var cellH = 14;
+      var H = m.t + m.b + cellH * rows.length;
+
+      var svg = d3.select("#heat-b")
+        .append("svg")
+        .attr("width", W)
+        .attr("height", H)
+        .append("g")
+        .attr("transform", "translate(" + m.l + "," + m.t + ")");
+
+      var color = d3.scaleSequential(d3.interpolateYlOrBr).domain([0, 0.5]);
+
+      svg.append("g")
+        .attr("class", "axis")
+        .selectAll("g")
+        .data(keys)
+        .enter()
+        .append("text")
+        .attr("x", function (_, i) { return i * cellW + cellW / 2; })
+        .attr("y", -8)
+        .attr("text-anchor", "middle")
+        .attr("fill", "#6b7a88")
+        .text(function (d) { return d; });
+
+      var rowg = svg.selectAll(".r")
+        .data(rows)
+        .enter()
+        .append("g")
+        .attr("transform", function (_, i) { return "translate(0," + (i * cellH) + ")"; });
+
+      rowg.append("text")
+        .attr("x", -6)
+        .attr("y", cellH / 2 + 3)
+        .attr("text-anchor", "end")
+        .attr("fill", "#9ab")
+        .attr("font-size", 10)
+        .text(function (d) { return d.outlet.length > 32 ? d.outlet.slice(0, 30) + "…" : d.outlet; });
+
+      rowg.selectAll("rect")
+        .data(function (d) { return keys.map(function (k) { return { o: d, k: k, v: d[k] }; }); })
+        .enter()
+        .append("rect")
+        .attr("x", function (_, i) { return i * cellW + 1; })
+        .attr("width", cellW - 2)
+        .attr("height", cellH - 1)
+        .attr("fill", function (d) { return color(d.v); })
+        .attr("stroke", "#1a1f25")
+        .attr("class", "heat-cell")
+        .style("animation", "none")
+        .append("title")
+        .text(function (d) { return d.o.outlet + " / " + d.k + ": " + (d.v * 100).toFixed(1) + "%"; });
+
+      rowg.style("animation", "panel-in 0.4s ease-out backwards");
+      d3.selectAll(".heat-cell")
+        .style("opacity", 0)
+        .transition()
+        .delay(function (_, i) { return i * 3; })
+        .duration(400)
+        .style("opacity", 1);
+
+      // 词云
+      var maxS = d3.max(D.wordcloud, function (d) { return d.size; }) || 1;
+      var scale = d3.scaleSqrt().domain([0, maxS]).range([10, 36]);
+      var host = d3.select("#wc-b");
+      D.wordcloud.forEach(function (w, i) {
+        host.append("span")
+          .attr("class", "wc-bubble")
+          .style("font-size", scale(w.size) + "px")
+          .style("color", d3.interpolateYlOrRd(0.3 + 0.55 * (w.size / maxS)))
+          .style("animation-delay", 0.02 * (i % 20) + "s")
+          .text(w.text);
+      });
+    });
+  </script>
+</body>
+</html>

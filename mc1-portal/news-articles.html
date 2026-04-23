@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>重定向</title>
+  <link rel="stylesheet" href="css/cia-theme.css" />
+  <script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var outlet = q.get("outlet") || "";
+    if (outlet) {
+      location.replace("archive.html#/news/" + encodeURIComponent(outlet));
+    }
+  })();
+  </script>
+</head>
+<body>
+  <header class="site-nav">
+    <a href="index.html">总部</a>
+    <a href="archive.html">统合档案室</a>
+  </header>
+  <div class="container" style="padding: 2rem 1.25rem">
+    <p style="color: var(--text)">新闻分馆已合并至 <a href="archive.html">统合档案室</a>。若未自动跳转，请手动打开该页，在「新闻分馆」中选择媒体。</p>
+  </div>
+</body>
+</html>

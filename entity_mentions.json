@@ -1,0 +1,168 @@
+{
+  "The Light of Truth": {
+    "GAStech": 18,
+    "Government": 14,
+    "People": 13,
+    "Locations": 19,
+    "POK": 1,
+    "APA": 4
+  },
+  "News Desk": {
+    "GAStech": 14,
+    "Government": 16,
+    "Locations": 24,
+    "POK": 12,
+    "APA": 4,
+    "People": 2
+  },
+  "The General Post": {
+    "GAStech": 18,
+    "People": 13,
+    "Locations": 19,
+    "Government": 14,
+    "POK": 3,
+    "APA": 1
+  },
+  "Central Bulletin": {
+    "POK": 13,
+    "Government": 15,
+    "Locations": 21,
+    "GAStech": 13,
+    "People": 2,
+    "APA": 4
+  },
+  "News Online Today": {
+    "GAStech": 42,
+    "People": 14,
+    "Locations": 101,
+    "Government": 38,
+    "POK": 42,
+    "APA": 12
+  },
+  "The Tulip": {
+    "GAStech": 18,
+    "POK": 2,
+    "Government": 14,
+    "People": 12,
+    "Locations": 19,
+    "APA": 1
+  },
+  "Daily Pegasus": {
+    "GAStech": 11,
+    "POK": 16,
+    "Government": 17,
+    "People": 3,
+    "Locations": 26,
+    "APA": 7
+  },
+  "The Orb": {
+    "GAStech": 11,
+    "POK": 15,
+    "APA": 7,
+    "Locations": 26,
+    "Government": 17,
+    "People": 3
+  },
+  "The Continent": {
+    "GAStech": 10,
+    "POK": 7,
+    "APA": 8,
+    "Government": 11,
+    "Locations": 14,
+    "People": 5
+  },
+  "World Journal": {
+    "GAStech": 10,
+    "POK": 7,
+    "APA": 6,
+    "People": 5,
+    "Locations": 13,
+    "Government": 11
+  },
+  "World Source": {
+    "GAStech": 6,
+    "Government": 6,
+    "People": 3,
+    "Locations": 8,
+    "POK": 4,
+    "APA": 4
+  },
+  "All News Today": {
+    "GAStech": 6,
+    "Locations": 17,
+    "POK": 11,
+    "Government": 9,
+    "APA": 5
+  },
+  "International News": {
+    "POK": 14,
+    "Locations": 20,
+    "Government": 10,
+    "APA": 3,
+    "GAStech": 8,
+    "People": 3
+  },
+  "The Truth": {
+    "Government": 14,
+    "Locations": 28,
+    "POK": 17,
+    "APA": 5,
+    "GAStech": 11,
+    "People": 4
+  },
+  "Athena Speaks": {
+    "POK": 12,
+    "Government": 16,
+    "Locations": 24,
+    "GAStech": 14,
+    "APA": 2
+  },
+  "The Wrap": {
+    "POK": 14,
+    "Government": 17,
+    "Locations": 26,
+    "GAStech": 11,
+    "People": 3,
+    "APA": 7
+  },
+  "The Guide": {
+    "Locations": 28,
+    "GAStech": 11,
+    "POK": 17,
+    "Government": 13,
+    "APA": 6,
+    "People": 4
+  },
+  "Who What News": {
+    "GAStech": 14,
+    "Government": 10,
+    "People": 9,
+    "Locations": 15,
+    "POK": 4,
+    "APA": 1
+  },
+  "Everyday News": {
+    "GAStech": 10,
+    "POK": 8,
+    "Locations": 13,
+    "APA": 6,
+    "Government": 11,
+    "People": 5
+  },
+  "The Explainer": {
+    "GAStech": 14,
+    "POK": 15,
+    "Government": 15,
+    "Locations": 24,
+    "APA": 4,
+    "People": 3
+  },
+  "Worldwise": {
+    "POK": 17,
+    "Government": 14,
+    "Locations": 28,
+    "APA": 6,
+    "GAStech": 11,
+    "People": 4
+  }
+}
