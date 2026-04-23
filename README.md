@@ -11,6 +11,8 @@ python3 -m http.server 8000
 
 打开 `http://127.0.0.1:8000/mc1-portal/index.html` 。
 
-**GitHub Pages**（在仓库 Settings → Pages 中启用后）
+**GitHub Pages**（Settings → Pages，源选 `main` 分支、**根目录 /**）
 
-`https://<用户>.github.io/<仓库名>/mc1-portal/index.html`
+- 仓库根已含 **`.nojekyll`**，避免 Jekyll 干扰静态文件。
+- 访问：`https://<用户>.github.io/<仓库名>/mc1-portal/index.html`  
+  或根路径 `https://<用户>.github.io/<仓库名>/`（会跳转到 `mc1-portal/index.html`）。

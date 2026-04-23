@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>任务 C · 关系网</title>
   <link rel="stylesheet" href="css/cia-theme.css" />
+  <script src="js/paths.js"></script>
   <script src="vendor/d3.v7.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/d3@7.9.0/dist/d3.min.js'"></script>
 </head>
 <body>
@@ -118,7 +119,7 @@
     });
   }
 
-  fetch("data/task_c.json")
+  fetch(MC1PORTAL.resolve("data/task_c.json"))
     .then(function (r) { return r.json(); })
     .then(function (D) {
       var A = D.analystGraph;

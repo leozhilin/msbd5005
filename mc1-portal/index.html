@@ -78,6 +78,7 @@
     </p>
   </div>
 
+  <script src="js/paths.js"></script>
   <script>
   (function () {
     if (location.protocol === "file:") {
@@ -85,7 +86,11 @@
       e.style.display = "block";
       e.textContent = "请使用 HTTP 服务打开本页，否则部分链接无法工作。";
     }
-    fetch("data/manifest.json")
+    fetch(
+      (window.MC1PORTAL && window.MC1PORTAL.resolve
+        ? window.MC1PORTAL.resolve("data/manifest.json")
+        : "data/manifest.json")
+    )
       .then(function (r) { return r.json(); })
       .then(function (M) {
         var s = (M && M.stats) || {};

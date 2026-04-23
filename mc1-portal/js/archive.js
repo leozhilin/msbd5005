@@ -40,9 +40,15 @@
     });
   }
 
+  function u(rel) {
+    return window.MC1PORTAL && window.MC1PORTAL.resolve
+      ? window.MC1PORTAL.resolve(rel)
+      : rel;
+  }
+
   function loadEmailIndex() {
     if (E) return Promise.resolve(E);
-    return fetch("data/emails_by_person.json")
+    return fetch(u("data/emails_by_person.json"))
       .then(function (r) { return r.json(); })
       .then(function (d) { E = d; return E; });
   }
@@ -98,7 +104,7 @@
 
     loadMammoth()
       .then(function () {
-        return fetch(item.path);
+        return fetch(u(item.path));
       })
       .then(function (r) {
         if (!r.ok) throw new Error("docx " + r.status);
@@ -175,7 +181,7 @@
       .then(function (pack) {
         var art = (pack.articles || []).find(function (a) { return a.file === file; });
         if (!art) throw new Error("no art");
-        return fetch(art.path);
+        return fetch(u(art.path));
       })
       .then(function (r) { return r.text(); })
       .then(function (txt) {
@@ -212,12 +218,12 @@
 
   function ensureArticleList(outlet) {
     var ulA = byId("ul-art");
-    return fetch("data/outlet_news/_index.json")
+    return fetch(u("data/outlet_news/_index.json"))
       .then(function (r) { return r.json(); })
       .then(function (idx) {
         var slug = idx[outlet];
         if (!slug) throw new Error("no outlet");
-        return fetch("data/outlet_news/" + slug + ".json");
+        return fetch(u("data/outlet_news/" + slug + ".json"));
       })
       .then(function (r) { return r.json(); })
       .then(function (pack) {
@@ -283,7 +289,7 @@
   }
 
   function init() {
-    fetch("data/manifest.json")
+    fetch(u("data/manifest.json"))
       .then(function (r) { return r.json(); })
       .then(function (d) {
         man = d;
@@ -299,7 +305,7 @@
           li.appendChild(b);
           ulp.appendChild(li);
         });
-        return fetch("data/outlet_news/_index.json");
+        return fetch(u("data/outlet_news/_index.json"));
       })
       .then(function (r) { return r.json(); })
       .then(function (idx) {
@@ -323,7 +329,7 @@
       })
       .catch(function () {
         byId("main-content").innerHTML =
-          '<p class="arch-placeholder" style="color:#e99">需要 HTTP 服务且已运行 <code>generate_data.py</code> 生成 data 目录。</p>';
+          '<p class="arch-placeholder" style="color:#e99">无法加载 <code>data/manifest.json</code>。请在本地/服务器用 <strong>HTTP</strong> 打开本站点（不要 file://），并确认已执行 <code>python3 mc1-portal/generate_data.py</code> 且已把 <code>mc1-portal/data</code> 推送到 GitHub。若在 GitHub Pages，请在仓库根目录放 <code>.nojekyll</code> 后重新推送，并检查访问地址为 <code>…/mc1-portal/index.html</code>。</p>';
       });
 
     byId("tab-person").addEventListener("click", function () {
