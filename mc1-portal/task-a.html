@@ -20,142 +20,273 @@
 
   <div class="container">
     <div class="intel-header">
-      <h1 class="dossier-h1">TASK A / 新闻数据特征</h1>
+      <h1 class="dossier-h1">TASK A / 原始新闻源与传播线索</h1>
       <p class="mission-block" style="margin:0; border:0; padding:0">
-        依据 <code>timeline_data.json</code> 中索引的新闻记录统计各源发稿量；「同题共现」网络连接在同一归一化标题下共同出现的媒体对（可视为转载链或同题报道线索）。
+        基于 <code>MC1/News Articles</code> 原始文本抽取 <code>SOURCE / TITLE / PUBLISHED</code>：左侧给出首发占比与平均跟发延迟，右侧展示 A→B（A 更早出现）有向关系。可用控制区筛选边数量与权重，平衡清晰度与信息量。
       </p>
     </div>
 
     <div class="panel">
-      <h2>各源报道量 (timeline 索引条数)</h2>
+      <h2>首发占比（越高越接近 primary 倾向）</h2>
       <div class="viz-wrap" id="bar-a" style="min-height:420px"></div>
     </div>
 
     <div class="panel">
-      <h2>同题多源共现 (衍生关系线索)</h2>
-      <div class="viz-wrap" id="net-a" style="min-height:500px"></div>
+      <h2>平均跟发延迟（天）</h2>
+      <div class="viz-wrap" id="lag-a" style="min-height:360px"></div>
+    </div>
+
+    <div class="panel">
+      <h2>有向 lead-follow 网络（A → B 表示 A 更早）</h2>
+      <div style="display:flex; flex-wrap:wrap; gap:0.8rem; margin-bottom:0.7rem; align-items:center">
+        <label style="font-size:12px; color:#9ab">显示边：</label>
+        <button type="button" class="btn-a" data-top="12">Top 12</button>
+        <button type="button" class="btn-a active" data-top="20">Top 20</button>
+        <button type="button" class="btn-a" data-top="9999">全部</button>
+        <label style="font-size:12px; color:#9ab; margin-left:0.6rem">最小权重</label>
+        <input id="w-a" type="range" min="1" max="8" value="1" step="1" />
+        <span id="w-a-v" style="font-size:12px; color:#9ab">≥1</span>
+        <button id="lbl-a" type="button" class="btn-a">显示边权标签</button>
+      </div>
+      <div class="viz-wrap" id="net-a" style="min-height:560px"></div>
       <p class="caption" id="cap-a"></p>
     </div>
   </div>
+
+  <style>
+    .btn-a {
+      background: #121a20;
+      color: #9ab;
+      border: 1px solid #2a3a42;
+      padding: 0.35rem 0.6rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .btn-a.active {
+      color: #d7f8ff;
+      border-color: #3dd0e0;
+      background: #13212a;
+    }
+  </style>
 
   <script>
   fetch(MC1PORTAL.resolve("data/task_a.json"))
     .then(function (r) { return r.json(); })
     .then(function (D) {
       if (D.methodNote) document.getElementById("cap-a").textContent = D.methodNote;
+      var st = D.stats || {};
+      document.getElementById("cap-a").textContent =
+        (D.methodNote || "") +
+        " | 可用原始新闻: " + (st.rawArticlesUsable || 0) +
+        " 篇；同题组: " + (st.coTopicGroups || 0) + " 组。";
 
-      var W = document.getElementById("bar-a").clientWidth || 800;
-      var m = { t: 20, r: 20, b: 120, l: 60 };
-      var data = D.barBySource;
-      var H = 400;
-      var x = d3.scaleBand()
-        .domain(data.map(function (d) { return d.source; }))
-        .range([0, W - m.l - m.r])
-        .padding(0.2);
-      var y = d3.scaleLinear()
-        .domain([0, d3.max(data, function (d) { return d.count; }) * 1.1])
-        .nice()
-        .range([H - m.t - m.b, 0]);
-
-      var svg = d3.select("#bar-a")
-        .append("svg")
-        .attr("width", W)
-        .attr("height", H);
-
-      var g = svg.append("g").attr("transform", "translate(" + m.l + "," + m.t + ")");
-
-      g.append("g")
-        .attr("class", "axis")
-        .attr("transform", "translate(0," + (H - m.t - m.b) + ")")
-        .call(d3.axisBottom(x))
-        .selectAll("text")
-        .style("text-anchor", "end")
-        .attr("dx", "-.6em")
-        .attr("dy", "0.3em")
-        .attr("transform", "rotate(-50)");
-
-      g.append("g")
-        .attr("class", "axis")
-        .call(d3.axisLeft(y).ticks(6));
-
-      g.selectAll("rect")
-        .data(data)
-        .enter()
-        .append("rect")
-        .attr("class", "bar")
-        .attr("x", function (d) { return x(d.source); })
-        .attr("y", function (d) { return y(d.count); })
-        .attr("width", x.bandwidth())
-        .attr("height", function (d) { return (H - m.t - m.b) - y(d.count); })
+      // ---- 图1：首发占比 ----
+      var fs = (D.firstPublishShare || []).slice(0, 18);
+      var W1 = document.getElementById("bar-a").clientWidth || 800;
+      var H1 = 400;
+      var m1 = { t: 18, r: 20, b: 130, l: 52 };
+      var x1 = d3.scaleBand().domain(fs.map(function (d) { return d.source; })).range([0, W1 - m1.l - m1.r]).padding(0.2);
+      var y1 = d3.scaleLinear().domain([0, 1]).range([H1 - m1.t - m1.b, 0]);
+      var svg1 = d3.select("#bar-a").append("svg").attr("width", W1).attr("height", H1);
+      var g1 = svg1.append("g").attr("transform", "translate(" + m1.l + "," + m1.t + ")");
+      g1.append("g").attr("class", "axis").attr("transform", "translate(0," + (H1 - m1.t - m1.b) + ")")
+        .call(d3.axisBottom(x1)).selectAll("text").style("text-anchor", "end").attr("dx", "-.6em").attr("dy", "0.3em").attr("transform", "rotate(-52)");
+      g1.append("g").attr("class", "axis").call(d3.axisLeft(y1).ticks(5).tickFormat(d3.format(".0%")));
+      g1.selectAll("rect").data(fs).enter().append("rect")
+        .attr("x", function (d) { return x1(d.source); })
+        .attr("y", function (d) { return y1(d.share); })
+        .attr("width", x1.bandwidth())
+        .attr("height", function (d) { return (H1 - m1.t - m1.b) - y1(d.share); })
+        .attr("fill", "#35c4d6")
         .append("title")
-        .text(function (d) { return d.source + ": " + d.count; });
+        .text(function (d) { return d.source + ": " + (d.share * 100).toFixed(1) + "%, first=" + d.firstCount + ", topics=" + d.topicCount; });
 
-      // --- 网络 ---
-      var sn = D.sameTitleCooccurrence;
-      var nodes = sn.nodes.map(function (id) { return { id: id }; });
-      var links = sn.links.map(function (l) {
-        return { source: l.source, target: l.target, value: l.weight };
+      // ---- 图2：平均延迟 ----
+      var lag = (D.avgLagDays || []).slice().sort(function (a, b) { return b.avgLag - a.avgLag; }).slice(0, 16);
+      var W2 = document.getElementById("lag-a").clientWidth || 800;
+      var H2 = 340;
+      var m2 = { t: 12, r: 30, b: 24, l: 170 };
+      var x2 = d3.scaleLinear()
+        .domain([0, d3.max(lag, function (d) { return d.avgLag; }) * 1.1 || 1])
+        .range([0, W2 - m2.l - m2.r]);
+      var y2 = d3.scaleBand().domain(lag.map(function (d) { return d.source; })).range([0, H2 - m2.t - m2.b]).padding(0.2);
+      var svg2 = d3.select("#lag-a").append("svg").attr("width", W2).attr("height", H2);
+      var g2 = svg2.append("g").attr("transform", "translate(" + m2.l + "," + m2.t + ")");
+      g2.append("g").attr("class", "axis").call(d3.axisLeft(y2).tickSize(0));
+      g2.append("g").attr("class", "axis").attr("transform", "translate(0," + (H2 - m2.t - m2.b) + ")")
+        .call(d3.axisBottom(x2).ticks(6));
+      g2.selectAll("rect").data(lag).enter().append("rect")
+        .attr("x", 0).attr("y", function (d) { return y2(d.source); })
+        .attr("width", function (d) { return x2(d.avgLag); })
+        .attr("height", y2.bandwidth()).attr("fill", "#6abf69")
+        .append("title").text(function (d) { return d.source + ": " + d.avgLag.toFixed(2) + " days"; });
+
+      // ---- 图3：有向网络 + 交互 ----
+      var graph = D.directedLeadFollow || { nodes: [], links: [] };
+      var nodeById = {};
+      graph.nodes.forEach(function (n) { nodeById[n.id] = n; });
+      // D3 forceLink 会把 source/target 从字符串改成对象；这里先冻结一份原始边，避免后续筛选失效。
+      var allLinksRaw = (graph.links || []).map(function (d) {
+        return {
+          source: (d.source && d.source.id) ? d.source.id : d.source,
+          target: (d.target && d.target.id) ? d.target.id : d.target,
+          weight: d.weight || 0
+        };
+      }).sort(function (a, b) { return b.weight - a.weight; });
+      var maxWeightAll = d3.max(allLinksRaw, function (d) { return d.weight; }) || 1;
+      var topN = 20;
+      var minWeight = 1;
+      var showLabels = true;
+      var slider = document.getElementById("w-a");
+      slider.max = String(maxWeightAll);
+      slider.value = "1";
+      document.getElementById("w-a-v").textContent = "≥1 / max " + maxWeightAll;
+      document.getElementById("lbl-a").classList.add("active");
+
+      var btns = document.querySelectorAll(".btn-a[data-top]");
+      btns.forEach(function (b) {
+        b.addEventListener("click", function () {
+          btns.forEach(function (x) { x.classList.remove("active"); });
+          b.classList.add("active");
+          topN = parseInt(b.getAttribute("data-top"), 10) || 20;
+          renderNet();
+        });
+      });
+      slider.addEventListener("input", function (e) {
+        minWeight = parseInt(e.target.value, 10) || 1;
+        document.getElementById("w-a-v").textContent = "≥" + minWeight + " / max " + maxWeightAll;
+        renderNet();
+      });
+      document.getElementById("lbl-a").addEventListener("click", function (e) {
+        showLabels = !showLabels;
+        e.target.classList.toggle("active", showLabels);
+        renderNet();
       });
 
-      var Wn = document.getElementById("net-a").clientWidth || 800;
-      var Hn = 500;
-      var svgN = d3.select("#net-a")
-        .append("svg")
-        .attr("width", Wn)
-        .attr("height", Hn);
+      function renderNet() {
+        d3.select("#net-a").selectAll("*").remove();
+        var Wn = document.getElementById("net-a").clientWidth || 800;
+        var Hn = 560;
+        if (minWeight > maxWeightAll) minWeight = maxWeightAll;
+        var candidates = allLinksRaw.filter(function (d) { return d.weight >= minWeight; });
+        var links = (topN >= 9999 ? candidates : candidates.slice(0, topN)).map(function (d) {
+          return { source: d.source, target: d.target, weight: d.weight };
+        });
+        var ids = {};
+        links.forEach(function (l) { ids[l.source] = true; ids[l.target] = true; });
+        var nodes = (graph.nodes || []).filter(function (n) { return ids[n.id]; });
+        if (!nodes.length) {
+          d3.select("#net-a").append("div").attr("class", "caption").text(
+            "当前筛选无边（最小权重≥" + minWeight + "，全图最大权重=" + maxWeightAll + "）。请降低最小权重。"
+          );
+          return;
+        }
+        var mxF = d3.max(nodes, function (d) { return d.firstCount || 1; }) || 1;
+        var rScale = d3.scaleSqrt().domain([0, mxF]).range([7, 17]);
 
-      var sim = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(function (d) { return d.id; }).distance(60))
-        .force("charge", d3.forceManyBody().strength(-220))
-        .force("center", d3.forceCenter(Wn / 2, Hn / 2))
-        .force("collide", d3.forceCollide(28));
+        var svg = d3.select("#net-a").append("svg").attr("width", Wn).attr("height", Hn);
+        var defs = svg.append("defs");
+        defs.append("marker")
+          .attr("id", "arr-a")
+          .attr("viewBox", "0 -5 10 10")
+          .attr("refX", 10)
+          .attr("refY", 0)
+          .attr("markerWidth", 7)
+          .attr("markerHeight", 7)
+          .attr("markerUnits", "userSpaceOnUse")
+          .attr("orient", "auto")
+          .append("path")
+          .attr("d", "M0,-5L10,0L0,5")
+          .attr("fill", "#cc6a11");
 
-      var link = svgN.append("g")
-        .attr("stroke", "rgba(61,208,224,0.5)")
-        .attr("stroke-width", function (d) { return 1; })
-        .selectAll("line")
-        .data(links)
-        .enter()
-        .append("line")
-        .attr("stroke-width", function (d) { return Math.sqrt(d.value) * 0.4 + 0.3; });
+        var sim = d3.forceSimulation(nodes)
+          .force("link", d3.forceLink(links).id(function (d) { return d.id; }).distance(function (d) { return 70 + 140 / (d.weight + 1); }))
+          .force("charge", d3.forceManyBody().strength(-340))
+          .force("center", d3.forceCenter(Wn / 2, Hn / 2))
+          .force("collide", d3.forceCollide(function (d) { return rScale(d.firstCount || 1) + 8; }));
 
-      var node = svgN.append("g")
-        .selectAll("g")
-        .data(nodes)
-        .enter()
-        .append("g")
-        .call(d3.drag()
-          .on("start", function (e, d) {
-            if (!e.active) sim.alphaTarget(0.2).restart();
-            d.fx = d.x; d.fy = d.y;
-          })
-          .on("drag", function (e, d) { d.fx = e.x; d.fy = e.y; })
-          .on("end", function (e, d) {
-            if (!e.active) sim.alphaTarget(0);
-            d.fx = null; d.fy = null;
-          }));
+        var link = svg.append("g").selectAll("line").data(links).enter().append("line")
+          .attr("stroke", "#cc6a11")
+          .attr("stroke-opacity", 0.86)
+          .attr("stroke-width", 1.6)
+          .attr("stroke-linecap", "round")
+          .attr("marker-end", "url(#arr-a)");
 
-      node.append("circle")
-        .attr("r", 10)
-        .attr("fill", "#0f1f18")
-        .attr("stroke", "#2ee46f")
-        .attr("stroke-width", 1.2);
+        var lab = svg.append("g").selectAll("text").data(showLabels ? links : []).enter().append("text")
+          .attr("font-size", 9).attr("fill", "#e6b37d")
+          .attr("text-anchor", "middle")
+          .attr("paint-order", "stroke")
+          .attr("stroke", "#0a0f14")
+          .attr("stroke-width", 3)
+          .text(function (d) { return d.weight; });
 
-      node.append("text")
-        .text(function (d) { return d.id.length > 18 ? d.id.slice(0, 16) + "…" : d.id; })
-        .attr("font-size", 9)
-        .attr("fill", "#8ab")
-        .attr("dx", 12)
-        .attr("dy", 3);
+        var node = svg.append("g").selectAll("g").data(nodes).enter().append("g")
+          .call(d3.drag()
+            .on("start", function (e, d) { if (!e.active) sim.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; })
+            .on("drag", function (e, d) { d.fx = e.x; d.fy = e.y; })
+            .on("end", function (e, d) { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
 
-      sim.on("tick", function () {
-        link
-          .attr("x1", function (d) { return d.source.x; })
-          .attr("y1", function (d) { return d.source.y; })
-          .attr("x2", function (d) { return d.target.x; })
-          .attr("y2", function (d) { return d.target.y; });
-        node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
-      });
+        node.append("circle")
+          .attr("r", function (d) { return rScale(d.firstCount || 1); })
+          .attr("fill", "#2b90d9")
+          .attr("stroke", "#134b75")
+          .attr("stroke-width", 1.2)
+          .append("title")
+          .text(function (d) {
+            return d.id + "\n首发次数: " + (d.firstCount || 0) +
+              "\n首发占比: " + ((d.firstShare || 0) * 100).toFixed(1) + "%" +
+              "\n平均延迟: " + (d.avgLag || 0).toFixed(2) + " 天";
+          });
+
+        node.append("text")
+          .text(function (d) { return d.id.length > 16 ? d.id.slice(0, 14) + "…" : d.id; })
+          .attr("font-size", 9).attr("fill", "#9ab")
+          .attr("dx", 12).attr("dy", 2);
+
+        node.append("text")
+          .text(function (d) { return d.firstCount || 0; })
+          .attr("font-size", 8).attr("fill", "#fff")
+          .attr("text-anchor", "middle").attr("dy", 3);
+
+        sim.on("tick", function () {
+          link
+            .attr("x1", function (d) {
+              var dx = d.target.x - d.source.x;
+              var dy = d.target.y - d.source.y;
+              var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+              var sr = rScale(d.source.firstCount || 1);
+              return d.source.x + (dx / dist) * (sr + 1);
+            })
+            .attr("y1", function (d) {
+              var dx = d.target.x - d.source.x;
+              var dy = d.target.y - d.source.y;
+              var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+              var sr = rScale(d.source.firstCount || 1);
+              return d.source.y + (dy / dist) * (sr + 1);
+            })
+            .attr("x2", function (d) {
+              var dx = d.target.x - d.source.x;
+              var dy = d.target.y - d.source.y;
+              var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+              var tr = rScale(d.target.firstCount || 1);
+              return d.target.x - (dx / dist) * (tr + 9);
+            })
+            .attr("y2", function (d) {
+              var dx = d.target.x - d.source.x;
+              var dy = d.target.y - d.source.y;
+              var dist = Math.sqrt(dx * dx + dy * dy) || 1;
+              var tr = rScale(d.target.firstCount || 1);
+              return d.target.y - (dy / dist) * (tr + 9);
+            });
+          node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
+          lab
+            .attr("x", function (d) { return (d.source.x + d.target.x) / 2; })
+            .attr("y", function (d) { return (d.source.y + d.target.y) / 2 - 6; });
+        });
+      }
+
+      renderNet();
     });
   </script>
 </body>

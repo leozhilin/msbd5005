@@ -5,6 +5,7 @@ import json
 import os
 import re
 from collections import Counter, defaultdict
+from datetime import datetime
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PRE = os.path.normpath(os.path.join(ROOT, ".."))
@@ -110,54 +111,180 @@ with open(os.path.join(OUT, "manifest.json"), "w", encoding="utf-8") as f:
         separators=(",", ":"),
     )
 
-# --- Task A: 同源标题共现（derivative / echo 线索）+ 各源篇数（timeline_data）---
-with open(os.path.join(PRE, "timeline_data.json"), encoding="utf-8") as f:
-    timeline = json.load(f)
+# --- Task A: 原始新闻文本 -> 同题组 -> 首发占比/延迟/有向 lead-follow ---
 
 
 def norm_title(t: str) -> str:
-    return re.sub(r"\s+", " ", t.strip().lower())
+    return re.sub(r"\s+", " ", (t or "").strip().lower())
 
+
+DATE_RE = re.compile(r"\b(19|20)\d{2}[/-]\d{1,2}[/-]\d{1,2}\b")
+
+
+def parse_date(s: str):
+    if not s:
+        return None
+    v = s.strip()
+    for fmt in ("%Y/%m/%d", "%Y-%m-%d", "%Y/%m", "%Y-%m"):
+        try:
+            d = datetime.strptime(v, fmt)
+            if fmt in ("%Y/%m", "%Y-%m"):
+                return datetime(d.year, d.month, 1)
+            return d
+        except ValueError:
+            continue
+    return None
+
+
+def extract_field(lines, key):
+    pref = key.upper() + ":"
+    for line in lines:
+        s = line.strip()
+        if s.upper().startswith(pref):
+            return s[len(pref) :].strip()
+    return ""
+
+
+def extract_date(lines):
+    # 1) 优先取 PUBLISHED 行内日期
+    pub = extract_field(lines, "PUBLISHED")
+    m = DATE_RE.search(pub)
+    if m:
+        return m.group(0)
+    # 2) 兼容脏格式：日期在下一行或其他行
+    for line in lines:
+        m = DATE_RE.search(line)
+        if m:
+            return m.group(0)
+    return ""
+
+
+raw_records = []
+for dirpath, _, files in os.walk(MC1):
+    for fn in files:
+        if not fn.endswith(".txt"):
+            continue
+        p = os.path.join(dirpath, fn)
+        try:
+            text = open(p, encoding="utf-8", errors="ignore").read()
+        except Exception:
+            continue
+        lines = text.splitlines()
+        src = extract_field(lines, "SOURCE") or os.path.basename(dirpath)
+        ttl = extract_field(lines, "TITLE")
+        ds = extract_date(lines)
+        dt = parse_date(ds)
+        if not src or not ttl or dt is None:
+            continue
+        raw_records.append({"source": src.strip(), "title": ttl.strip(), "date": dt})
 
 by_title = defaultdict(list)
-for r in timeline:
-    key = (r.get("date", ""), norm_title(r.get("title", "")))
-    by_title[norm_title(r.get("title", ""))].append(
-        {"source": r["source"], "date": r.get("date", "")}
-    )
+for r in raw_records:
+    t = norm_title(r["title"])
+    if t and len(t) >= 4:
+        by_title[t].append({"source": r["source"], "date": r["date"]})
 
-co_edges = Counter()
-for title, items in by_title.items():
-    if not title or len(title) < 4:
+first_pub = Counter()
+topic_count = Counter()
+lag_sum = Counter()
+lag_n = Counter()
+lead_follow = Counter()
+co_topics = 0
+
+for _, items in by_title.items():
+    if len(items) < 2:
         continue
-    srcs = list({i["source"] for i in items})
-    if len(srcs) < 2:
+    src_first = {}
+    for it in items:
+        s = it["source"]
+        d = it["date"]
+        if s not in src_first or d < src_first[s]:
+            src_first[s] = d
+    if len(src_first) < 2:
         continue
-    srcs.sort()
+
+    co_topics += 1
+    earliest = min(src_first.values())
+    earliest_src = [s for s, d in src_first.items() if d == earliest]
+
+    for s in src_first:
+        topic_count[s] += 1
+        lag_sum[s] += (src_first[s] - earliest).days
+        lag_n[s] += 1
+    for s in earliest_src:
+        first_pub[s] += 1
+
+    srcs = sorted(src_first.keys())
     for i in range(len(srcs)):
         for j in range(i + 1, len(srcs)):
-            co_edges[(srcs[i], srcs[j])] += 1
+            a, b = srcs[i], srcs[j]
+            da, db = src_first[a], src_first[b]
+            if da < db:
+                lead_follow[(a, b)] += 1
+            elif db < da:
+                lead_follow[(b, a)] += 1
 
-source_count = Counter(r["source"] for r in timeline)
+first_share = []
+avg_lag = []
+for s, tc in topic_count.items():
+    if tc <= 0:
+        continue
+    first_share.append(
+        {
+            "source": s,
+            "share": first_pub[s] / tc,
+            "firstCount": first_pub[s],
+            "topicCount": tc,
+        }
+    )
+    avg_lag.append(
+        {
+            "source": s,
+            "avgLag": (lag_sum[s] / lag_n[s]) if lag_n[s] else 0.0,
+            "topicCount": tc,
+        }
+    )
 
-nodes_a = sorted(set(s for a, b in co_edges for s in (a, b)))
-links_a = [
-    {"source": a, "target": b, "weight": w}
-    for (a, b), w in co_edges.items()
-]
+first_share.sort(key=lambda x: (-x["share"], -x["firstCount"], x["source"]))
+avg_lag.sort(key=lambda x: (-x["avgLag"], x["source"]))
+
+node_set = set()
+for (a, b), _ in lead_follow.items():
+    node_set.add(a)
+    node_set.add(b)
+for s in topic_count:
+    node_set.add(s)
+
+nodes_a = []
+for s in sorted(node_set):
+    tc = topic_count.get(s, 0)
+    fc = first_pub.get(s, 0)
+    nodes_a.append(
+        {
+            "id": s,
+            "firstCount": fc,
+            "topicCount": tc,
+            "firstShare": (fc / tc) if tc else 0.0,
+            "avgLag": (lag_sum[s] / lag_n[s]) if lag_n[s] else 0.0,
+        }
+    )
+
+links_a = []
+for (a, b), w in lead_follow.items():
+    links_a.append({"source": a, "target": b, "weight": w})
 links_a.sort(key=lambda x: -x["weight"])
-
-bar_a = [{"source": s, "count": c} for s, c in source_count.most_common()]
 
 with open(os.path.join(OUT, "task_a.json"), "w", encoding="utf-8") as f:
     json.dump(
         {
-            "barBySource": bar_a,
-            "sameTitleCooccurrence": {
-                "nodes": nodes_a,
-                "links": links_a,
+            "firstPublishShare": first_share,
+            "avgLagDays": avg_lag,
+            "directedLeadFollow": {"nodes": nodes_a, "links": links_a},
+            "stats": {
+                "rawArticlesUsable": len(raw_records),
+                "coTopicGroups": co_topics,
             },
-            "methodNote": "条形图与 timeline_data.json 中各媒体记录数一致。共现边表示同一归一化标题在索引中至少被两家媒体使用，可视为「同源转载/同题」线索（非显式引文）。",
+            "methodNote": "Task A 基于 MC1/News Articles 原始 .txt 自动提取 SOURCE/TITLE/PUBLISHED；以归一化标题形成同题组，在组内按最早日期统计首发占比、平均跟发延迟及 A→B（A 早于 B）方向边。该方法提供传播线索，不等同显式转载证明。",
         },
         f,
         ensure_ascii=False,
