@@ -59,6 +59,20 @@
     .k-item:last-child { border-bottom:none; }
     .hidden { display:none; }
     .legend-c { font-size:12px; color:#8ea1b3; margin:0.4rem 0 0.7rem; }
+    .line-legend { display:flex; flex-wrap:wrap; gap:0.9rem; margin:0.1rem 0 0.7rem; font-size:12px; color:#9fb3c2; }
+    .line-legend span::before {
+      content:"";
+      display:inline-block;
+      width:12px;
+      height:3px;
+      margin-right:6px;
+      vertical-align:middle;
+      border-radius:3px;
+    }
+    .line-legend .l-off::before { background:#2ee46f; }
+    .line-legend .l-unoff::before { background:#e4b12e; }
+    .line-legend .l-conf::before { background:#e45555; }
+    .line-legend .l-weak::before { background:#3dd0e0; }
     .timeline-wrap { margin-top: 0.7rem; }
     .timeline-wrap svg { height: 180px; width: 100%; }
     .matrix {
@@ -127,7 +141,7 @@
             <label class="check"><input id="t-off" type="checkbox" checked /> official</label>
             <label class="check"><input id="t-unoff" type="checkbox" checked /> unofficial</label>
             <label class="check"><input id="t-conf" type="checkbox" checked /> conflict</label>
-            <label class="check"><input id="t-loc" type="checkbox" checked /> location</label>
+            <label class="check"><input id="t-loc" type="checkbox" checked /> weak / inferred</label>
           </div>
           <div class="group">
             <h3>预设</h3>
@@ -149,7 +163,13 @@
 
       <main>
         <div id="view-rel">
-          <div class="legend-c">边颜色：official / unofficial / conflict / location；线宽随权重变化。</div>
+          <div class="legend-c">边颜色：official / unofficial / conflict / weak(inferred)；线宽随权重变化。</div>
+          <div class="line-legend">
+            <span class="l-off">official</span>
+            <span class="l-unoff">unofficial</span>
+            <span class="l-conf">conflict</span>
+            <span class="l-weak">weak / inferred</span>
+          </div>
           <div id="viz-rel" class="viz-wrap" style="min-height:620px"></div>
         </div>
         <div id="view-goal" class="hidden">
