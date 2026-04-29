@@ -19,9 +19,13 @@
     }
     .layout-c {
       display:grid;
-      grid-template-columns: 290px minmax(0, 1fr) 340px;
+      grid-template-columns: 270px minmax(0, 1fr);
       gap: 1rem;
+      align-items: start;
     }
+    .ctl { grid-column: 1; grid-row: 1 / span 2; }
+    .layout-c > main { grid-column: 2; grid-row: 1; }
+    .layout-c > .detail { grid-column: 2; grid-row: 2; }
     .ctl h3, .detail h3 {
       margin:0 0 0.6rem;
       font-size:12px;
@@ -50,7 +54,7 @@
     }
     .btn-c.active { color:#d7f8ff; border-color:#3dd0e0; background:#13212a; }
     .detail p { margin:0.35rem 0; font-size: 13px; color:#b7c6d3; }
-    .k-list { max-height: 760px; overflow:auto; border:1px solid var(--border); background:#0a0e13; }
+    .k-list { max-height: 300px; overflow:auto; border:1px solid var(--border); background:#0a0e13; }
     .k-item { padding:0.45rem 0.55rem; border-bottom:1px solid #1c2732; font-size:12px; color:#9db0be; }
     .k-item:last-child { border-bottom:none; }
     .hidden { display:none; }
@@ -75,6 +79,7 @@
     .m-associated { background: rgba(228,177,46,0.16); }
     @media (max-width: 1020px) {
       .layout-c { grid-template-columns: 1fr; }
+      .ctl, .layout-c > main, .layout-c > .detail { grid-column: 1; grid-row: auto; }
     }
   </style>
 </head>
@@ -145,7 +150,7 @@
       <main>
         <div id="view-rel">
           <div class="legend-c">边颜色：official / unofficial / conflict / location；线宽随权重变化。</div>
-          <div id="viz-rel" class="viz-wrap" style="min-height:510px"></div>
+          <div id="viz-rel" class="viz-wrap" style="min-height:620px"></div>
         </div>
         <div id="view-goal" class="hidden">
           <div class="legend-c">Goals Matrix（组织 × 议题：Economic / Environmental / Security / Militancy）</div>
@@ -236,7 +241,6 @@
       if (!edges.length) {
         setDetail(["当前筛选无结果。"]);
         wrap.innerHTML = '<div class="caption">No visible relationships under current filters.</div>';
-        document.getElementById("timeline").innerHTML = "";
         return;
       }
       var W = wrap.clientWidth || 760, H = 540;
@@ -256,9 +260,10 @@
         .attr("flood-color", "#5ea7c7").attr("flood-opacity", "0.35");
       svg.append("rect").attr("x", 0).attr("y", 0).attr("width", designW).attr("height", designH).attr("fill", "url(#relBg)");
 
-      var edgeLayer = svg.append("g");
-      var nodeLayer = svg.append("g");
-      var labelLayer = svg.append("g");
+      var plotLayer = svg.append("g");
+      var edgeLayer = plotLayer.append("g");
+      var nodeLayer = plotLayer.append("g");
+      var labelLayer = plotLayer.append("g");
 
       function edgeColor(group) {
         if (group === "official") return "#2ee46f";
@@ -337,6 +342,21 @@
             .attr("stroke-width", 3)
             .text(n.label);
         });
+
+      // 依据当前可见节点范围自动缩放和平移，避免图挤在角落
+      var minX = d3.min(useNodes, function (n) { return n.x; });
+      var maxX = d3.max(useNodes, function (n) { return n.x; });
+      var minY = d3.min(useNodes, function (n) { return n.y; });
+      var maxY = d3.max(useNodes, function (n) { return n.y; });
+      var bw = Math.max(1, maxX - minX);
+      var bh = Math.max(1, maxY - minY);
+      var pad = 90;
+      var sx = (designW - pad * 2) / bw;
+      var sy = (designH - pad * 2) / bh;
+      var scale = Math.max(0.6, Math.min(2.2, Math.min(sx, sy)));
+      var tx = pad - minX * scale + (designW - (bw * scale + pad * 2)) / 2;
+      var ty = pad - minY * scale + (designH - (bh * scale + pad * 2)) / 2;
+      plotLayer.attr("transform", "translate(" + tx + "," + ty + ") scale(" + scale + ")");
 
       setDetail(["Relationships view loaded.", "Click an edge or node to inspect evidence."]);
     }
