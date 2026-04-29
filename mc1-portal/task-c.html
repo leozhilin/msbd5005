@@ -3,10 +3,80 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>任务 C · 关系网</title>
+  <title>任务 C · 双视图关系仪表盘</title>
   <link rel="stylesheet" href="css/cia-theme.css" />
   <script src="js/paths.js"></script>
   <script src="vendor/d3.v7.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/d3@7.9.0/dist/d3.min.js'"></script>
+  <style>
+    .stats-row { display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.9rem; margin-bottom: 0.2rem; }
+    .chip {
+      border: 1px solid var(--border);
+      background: #0a0e13;
+      color: #a9b7c3;
+      font-size: 12px;
+      font-family: var(--font-m);
+      padding: 0.25rem 0.55rem;
+    }
+    .layout-c {
+      display:grid;
+      grid-template-columns: 290px minmax(0, 1fr) 340px;
+      gap: 1rem;
+    }
+    .ctl h3, .detail h3 {
+      margin:0 0 0.6rem;
+      font-size:12px;
+      color: var(--warn);
+      font-family: var(--font-m);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .ctl .group { margin-bottom: 1rem; }
+    .ctl label { font-size: 12px; color:#8ea1b3; display:block; margin-bottom:0.35rem; }
+    .ctl input[type="search"], .ctl select {
+      width: 100%;
+      background:#080b0f;
+      border:1px solid #24313e;
+      color:#d7e3ee;
+      padding:0.45rem 0.5rem;
+      font-size:12px;
+      font-family: var(--font-m);
+    }
+    .check { display:flex; align-items:center; gap:0.45rem; margin:0.35rem 0; font-size:12px; color:#9db0be; }
+    .tabs-c { display:flex; gap:0.55rem; margin-bottom:0.75rem; }
+    .btn-c {
+      background:#121a20; color:#9ab; border:1px solid #2a3a42;
+      padding:0.35rem 0.6rem; border-radius:5px; cursor:pointer; font-size:12px;
+      font-family: var(--font-m);
+    }
+    .btn-c.active { color:#d7f8ff; border-color:#3dd0e0; background:#13212a; }
+    .detail p { margin:0.35rem 0; font-size: 13px; color:#b7c6d3; }
+    .k-list { max-height: 760px; overflow:auto; border:1px solid var(--border); background:#0a0e13; }
+    .k-item { padding:0.45rem 0.55rem; border-bottom:1px solid #1c2732; font-size:12px; color:#9db0be; }
+    .k-item:last-child { border-bottom:none; }
+    .hidden { display:none; }
+    .legend-c { font-size:12px; color:#8ea1b3; margin:0.4rem 0 0.7rem; }
+    .timeline-wrap { margin-top: 0.7rem; }
+    .timeline-wrap svg { height: 180px; width: 100%; }
+    .matrix {
+      display:grid;
+      grid-template-columns: 160px repeat(4, minmax(115px, 1fr));
+      border:1px solid var(--border);
+      background:#080b0f;
+    }
+    .matrix > div { border-right:1px solid #1d2834; border-bottom:1px solid #1d2834; padding:0.5rem; font-size:12px; }
+    .m-head { color:#d8e5ee; font-family: var(--font-m); background:#0f151d; }
+    .m-row { color:#b6c5d2; background:#0d1219; }
+    .m-cell { color:#d5e4ef; text-align:center; }
+    .m-aligned { background: rgba(46,228,111,0.16); }
+    .m-responds { background: rgba(61,208,224,0.18); }
+    .m-contested { background: rgba(228,85,85,0.20); }
+    .m-drives { background: rgba(245,121,55,0.22); }
+    .m-monitors { background: rgba(130,170,255,0.18); }
+    .m-associated { background: rgba(228,177,46,0.16); }
+    @media (max-width: 1020px) {
+      .layout-c { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
   <header class="site-nav">
@@ -20,187 +90,334 @@
 
   <div class="container">
     <div class="intel-header">
-      <h1 class="dossier-h1">TASK C / 组织与个人关系 (分析图 + 通信)</h1>
+      <h1 class="dossier-h1">TASK C / 关系网络与通信结构</h1>
       <p class="mission-block" style="margin:0; border:0; padding:0">
-        左：基于仓库内 <code>relationship_data.json</code> 的关系边（正式/非正式/冲突/地理），用于对应书面分析中的组织叙事。<br />
-        右：基于 <code>email_network.json</code> 邮件头聚合的<strong>高权重子集</strong>，节点为 54 名员工；边宽 ∝ 通信次数。
+        采用与参考页一致的双视图结构：<strong>Relationships</strong> + <strong>Goals Matrix</strong>。<br />
+        数据来源为 <code>MC1</code> 原始新闻与关系数据；Goals Matrix 议题由数据自动抽取 Top4，并支持证据回溯。
       </p>
+      <div id="stats" class="stats-row"></div>
     </div>
 
-    <p class="caption" style="border:none; padding:0; margin:0 0 1rem">
-      左图线色：<span style="color:#2ee46f">■</span> 正式 &nbsp;
-      <span style="color:#e4b12e">■</span> 非正式 &nbsp;
-      <span style="color:#e45555">■</span> 冲突 &nbsp;
-      <span style="color:#3dd0e0">■</span> 地理/属地
-    </p>
-    <div class="panel two-col">
-      <div>
-        <h2>分析关系图 (GAStech / POK / 政府等)</h2>
-        <div class="viz-wrap" id="viz-rel" style="min-height:400px"></div>
-      </div>
-      <div>
-        <h2>内部邮件通信 (Top 边)</h2>
-        <p class="caption" id="em-note" style="border:0; padding:0; margin:0 0 0.5rem"></p>
-        <div class="viz-wrap" id="viz-em" style="min-height:400px"></div>
-      </div>
+    <div class="panel layout-c">
+      <aside class="ctl">
+        <div class="group">
+          <h3>视图切换</h3>
+          <div class="tabs-c">
+            <button id="tab-rel" class="btn-c active">Relationships</button>
+            <button id="tab-goal" class="btn-c">Goals Matrix</button>
+          </div>
+        </div>
+        <div id="ctl-rel">
+          <div class="group">
+            <h3>关系筛选</h3>
+            <label for="search">关键词（节点/关系）</label>
+            <input id="search" type="search" placeholder="如 GAStech / conflict" />
+          </div>
+          <div class="group">
+            <label for="focus">焦点节点</label>
+            <select id="focus"><option value="">全部节点</option></select>
+          </div>
+          <div class="group">
+            <label>关系类型</label>
+            <label class="check"><input id="t-off" type="checkbox" checked /> official</label>
+            <label class="check"><input id="t-unoff" type="checkbox" checked /> unofficial</label>
+            <label class="check"><input id="t-conf" type="checkbox" checked /> conflict</label>
+            <label class="check"><input id="t-loc" type="checkbox" checked /> location</label>
+          </div>
+          <div class="group">
+            <h3>预设</h3>
+            <div class="tabs-c" style="flex-wrap:wrap;">
+              <button id="preset-all" class="btn-c active">Overview</button>
+              <button id="preset-official" class="btn-c">Official only</button>
+              <button id="preset-risk" class="btn-c">Conflict focus</button>
+            </div>
+          </div>
+        </div>
+        <div id="ctl-goal" class="hidden">
+          <div class="group">
+            <h3>矩阵筛选</h3>
+            <label class="check"><input id="g-official" type="checkbox" checked /> Show official goals</label>
+            <label class="check"><input id="g-inferred" type="checkbox" checked /> Show inferred / weak cells</label>
+          </div>
+        </div>
+      </aside>
+
+      <main>
+        <div id="view-rel">
+          <div class="legend-c">边颜色：official / unofficial / conflict / location；线宽随权重变化。</div>
+          <div id="viz-rel" class="viz-wrap" style="min-height:510px"></div>
+        </div>
+        <div id="view-goal" class="hidden">
+          <div class="legend-c">Goals Matrix（组织 × 议题：Economic / Environmental / Security / Militancy）</div>
+          <div id="viz-matrix" class="matrix"></div>
+        </div>
+      </main>
+
+      <aside class="detail">
+        <h3>细节面板</h3>
+        <div id="detail-main" class="k-list"></div>
+      </aside>
     </div>
   </div>
 
   <script>
-  var edgeColor = {
-    official: "#2ee46f",
-    unofficial: "#e4b12e",
-    conflict: "#e45555",
-    location: "#3dd0e0"
-  };
+    var DATA = null;
+    var state = {
+      view: "rel",
+      search: "",
+      focus: "",
+      showOfficial: true,
+      showUnofficial: true,
+      showConflict: true,
+      showWeak: true,
+      goalShowOfficial: true,
+      goalShowInferred: true
+    };
+    var nodeById = new Map();
+    var evidenceById = new Map();
+    var goalByKey = new Map();
 
-  function runForce(containerId, nodes, links, rScale) {
-    var W = document.getElementById(containerId).clientWidth || 500;
-    var H = 400;
-    var svg = d3.select("#" + containerId)
-      .append("svg")
-      .attr("width", W)
-      .attr("height", H);
-
-    var sim = d3.forceSimulation(nodes)
-      .force("link", d3.forceLink(links).id(function (d) { return d.id; }).distance(70))
-      .force("charge", d3.forceManyBody().strength(-200))
-      .force("center", d3.forceCenter(W / 2, H / 2))
-      .force("collide", d3.forceCollide(22));
-
-    var link = svg.append("g")
-      .attr("stroke-opacity", 0.7)
-      .selectAll("line")
-      .data(links)
-      .enter()
-      .append("line")
-      .attr("stroke", function (d) { return d.c || "#555"; })
-      .attr("stroke-width", rScale ? function (d) { return rScale(d); } : 1.5);
-
-    var node = svg.append("g")
-      .selectAll("g")
-      .data(nodes)
-      .enter()
-      .append("g")
-      .call(d3.drag()
-        .on("start", function (e, d) {
-          if (!e.active) sim.alphaTarget(0.25).restart();
-          d.fx = d.x; d.fy = d.y;
-        })
-        .on("drag", function (e, d) { d.fx = e.x; d.fy = e.y; })
-        .on("end", function (e, d) {
-          if (!e.active) sim.alphaTarget(0);
-          d.fx = null; d.fy = null;
-        }));
-
-    node.append("circle")
-      .attr("r", function (d) { return d.r || 11; })
-      .attr("fill", function (d) { return d.col || "#1a2a1f"; })
-      .attr("stroke", "#6b7a88")
-      .attr("stroke-width", 0.6);
-
-    node.append("text")
-      .text(function (d) {
-        var s = d.id;
-        return s.length > 14 ? s.slice(0, 12) + "…" : s;
-      })
-      .attr("font-size", 9)
-      .attr("fill", "#aab")
-      .attr("dx", 14)
-      .attr("dy", 3);
-
-    sim.on("tick", function () {
-      link
-        .attr("x1", function (d) { return d.source.x; })
-        .attr("y1", function (d) { return d.source.y; })
-        .attr("x2", function (d) { return d.target.x; })
-        .attr("y2", function (d) { return d.target.y; });
-      node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
-    });
-  }
-
-  fetch(MC1PORTAL.resolve("data/task_c.json"))
-    .then(function (r) { return r.json(); })
-    .then(function (D) {
-      var A = D.analystGraph;
-      var nlist = Object.keys(A.nodes).map(function (id) {
-        var t = (A.nodes[id] && A.nodes[id].type) || "other";
-        var col = { person: "#2a3d4e", organization: "#1e4d2e", location: "#1a3a4a" }[t] || "#333";
-        return { id: id, t: t, col: col, r: t === "organization" ? 14 : 11 };
+    function setDetail(lines) {
+      document.getElementById("detail-main").innerHTML = lines.map(function (t) { return '<div class=\"k-item\">' + t + "</div>"; }).join("");
+    }
+    function renderStats() {
+      var s = DATA.summary || {};
+      var chips = [
+        "Relationship nodes: " + (s.nodeCount || 0),
+        "People: " + DATA.relationships.nodes.filter(function (n) { return n.type === "person"; }).length,
+        "Organizations: " + DATA.relationships.nodes.filter(function (n) { return n.type === "organization"; }).length,
+        "Official ties: " + (s.officialEdgeCount || 0),
+        "Unofficial ties: " + (s.unofficialEdgeCount || 0),
+        "Conflicts: " + (s.conflictEdgeCount || 0),
+        "Goal cells: " + (s.goalCellCount || 0),
+        "Evidence items: " + ((DATA.evidence || []).length)
+      ];
+      document.getElementById("stats").innerHTML = chips.map(function (c) { return '<span class="chip">' + c + "</span>"; }).join("");
+    }
+    function fillFocus() {
+      var sel = document.getElementById("focus");
+      DATA.relationships.nodes.slice().sort(function (a, b) { return a.label.localeCompare(b.label); }).forEach(function (n) {
+        var o = document.createElement("option");
+        o.value = n.id;
+        o.textContent = n.label;
+        sel.appendChild(o);
       });
-      var llist = (A.edges || []).map(function (e) {
-        return {
-          source: e.source,
-          target: e.target,
-          c: edgeColor[e.type] || "#666"
-        };
+    }
+    function edgeVisible(e) {
+      var ok = (e.relationGroup === "official" && state.showOfficial) ||
+        (e.relationGroup === "unofficial" && state.showUnofficial) ||
+        (e.relationGroup === "conflict" && state.showConflict) ||
+        (e.relationGroup === "weak" && state.showWeak);
+      if (!ok) return false;
+      if (state.focus && e.source !== state.focus && e.target !== state.focus) return false;
+      if (state.search) {
+        var s = (e.displayLabel + " " + (e.summary || "") + " " + nodeById.get(e.source).label + " " + nodeById.get(e.target).label).toLowerCase();
+        if (s.indexOf(state.search.toLowerCase()) < 0) return false;
+      }
+      return true;
+    }
+    function evidenceLines(ids) {
+      var out = [];
+      (ids || []).slice(0, 8).forEach(function (id) {
+        var e = evidenceById.get(id);
+        if (!e) return;
+        out.push("· " + e.title + " | " + e.sourceType + " | " + (e.date || "undated") + " | " + e.sourceFile);
+        if (e.excerpt) out.push("  " + e.excerpt);
       });
-      runForce("viz-rel", nlist, llist, null);
+      return out;
+    }
+    function renderRel() {
+      var wrap = document.getElementById("viz-rel");
+      wrap.innerHTML = "";
+      var edges = DATA.relationships.edges.filter(edgeVisible);
+      var useNodes = DATA.relationships.nodes.filter(function (n) {
+        return edges.some(function (e) { return e.source === n.id || e.target === n.id; }) || !state.focus;
+      });
+      if (!edges.length) {
+        setDetail(["当前筛选无结果。"]);
+        wrap.innerHTML = '<div class="caption">No visible relationships under current filters.</div>';
+        document.getElementById("timeline").innerHTML = "";
+        return;
+      }
+      var W = wrap.clientWidth || 760, H = 540;
+      var designW = 1380, designH = 860;
+      var svg = d3.select("#viz-rel").append("svg")
+        .attr("width", W).attr("height", H)
+        .attr("viewBox", "0 0 " + designW + " " + designH)
+        .attr("preserveAspectRatio", "xMidYMid meet");
 
-      var N = D.emailNetwork;
-      document.getElementById("em-note").textContent = (N.displayNote || "") + " 全边 " + (N.linksTotal || 0) + " 条。";
-      var enodes = N.nodes.map(function (id) { return { id: id, col: "#223344", r: 8 }; });
-      var mx = d3.max(N.links, function (d) { return d.weight; }) || 1;
-      var wscale = d3.scaleLinear().domain([1, mx]).range([0.3, 4]);
-      var elinks = N.links.map(function (e) {
-        return { source: e.source, target: e.target, c: "rgba(228,85,85,0.45)", w: wscale(e.weight) };
+      var defs = svg.append("defs");
+      var grad = defs.append("linearGradient").attr("id", "relBg").attr("x1", "0%").attr("y1", "0%").attr("x2", "0%").attr("y2", "100%");
+      grad.append("stop").attr("offset", "0%").attr("stop-color", "#0f1720");
+      grad.append("stop").attr("offset", "100%").attr("stop-color", "#0a0f14");
+      defs.append("filter").attr("id", "nodeGlow")
+        .append("feDropShadow")
+        .attr("dx", "0").attr("dy", "0").attr("stdDeviation", "2.2")
+        .attr("flood-color", "#5ea7c7").attr("flood-opacity", "0.35");
+      svg.append("rect").attr("x", 0).attr("y", 0).attr("width", designW).attr("height", designH).attr("fill", "url(#relBg)");
+
+      var edgeLayer = svg.append("g");
+      var nodeLayer = svg.append("g");
+      var labelLayer = svg.append("g");
+
+      function edgeColor(group) {
+        if (group === "official") return "#2ee46f";
+        if (group === "unofficial") return "#e4b12e";
+        if (group === "conflict") return "#e45555";
+        return "#3dd0e0";
+      }
+      function edgeWidth(e) {
+        return Math.max(1.2, Math.min(9, 1.3 + (e.weight || 1) * 0.32));
+      }
+      function nodeRadius(n) {
+        var base = n.type === "organization" ? 14 : 9;
+        if (n.isCore) base += 3;
+        if ((n.degree || 0) > 120) base += 2;
+        return base;
+      }
+
+      edges.forEach(function (e) {
+        var s = nodeById.get(e.source), t = nodeById.get(e.target);
+        edgeLayer.append("line")
+          .attr("x1", s.x).attr("y1", s.y).attr("x2", t.x).attr("y2", t.y)
+          .attr("stroke", edgeColor(e.relationGroup))
+          .attr("stroke-width", edgeWidth(e))
+          .attr("stroke-linecap", "round")
+          .attr("stroke-opacity", Math.max(0.25, Number(e.confidence || 0.45)))
+          .attr("stroke-dasharray", e.relationGroup === "unofficial" ? "9 5" : (e.relationGroup === "weak" ? "4 7" : ""))
+          .style("cursor", "pointer")
+          .on("click", function () {
+            setDetail([
+              s.label + " ↔ " + t.label,
+              e.displayLabel,
+              "Group: " + e.relationGroup,
+              "Confidence: " + Number(e.confidence || 0).toFixed(2),
+              "Summary: " + (e.summary || "")
+            ].concat(evidenceLines(e.evidenceIds)));
+          });
       });
-      // 覆盖 runForce 的 stroke
-      d3.select("#viz-em").selectAll("svg").remove();
-      var W = document.getElementById("viz-em").clientWidth || 500;
-      var H = 400;
-      var svg = d3.select("#viz-em")
-        .append("svg")
-        .attr("width", W)
-        .attr("height", H);
-      var sim2 = d3.forceSimulation(enodes)
-        .force("link", d3.forceLink(elinks).id(function (d) { return d.id; }).distance(35))
-        .force("charge", d3.forceManyBody().strength(-90))
-        .force("center", d3.forceCenter(W / 2, H / 2))
-        .force("collide", d3.forceCollide(12));
-      var link2 = svg.append("g")
-        .selectAll("line")
-        .data(elinks)
-        .enter()
-        .append("line")
-        .attr("stroke", function (d) { return d.c; })
-        .attr("stroke-width", function (d) { return d.w; });
-      var node2 = svg.append("g")
-        .selectAll("g")
-        .data(enodes)
-        .enter()
-        .append("g")
-        .call(d3.drag()
-        .on("start", function (e, d) {
-          if (!e.active) sim2.alphaTarget(0.2).restart();
-          d.fx = d.x; d.fy = d.y;
-        })
-        .on("drag", function (e, d) { d.fx = e.x; d.fy = e.y; })
-        .on("end", function (e, d) {
-          if (!e.active) sim2.alphaTarget(0);
-          d.fx = null; d.fy = null;
-        }));
-      node2.append("circle")
-        .attr("r", 6)
-        .attr("fill", "#182630")
-        .attr("stroke", "#e4b12e");
-      node2.append("text")
-        .text(function (d) {
-          var s = d.id;
-          return s.length > 12 ? s.slice(0, 10) + "…" : s;
-        })
-        .attr("font-size", 8)
-        .attr("fill", "#7a8")
-        .attr("dx", 8)
-        .attr("dy", 2);
-      sim2.on("tick", function () {
-        link2
-          .attr("x1", function (d) { return d.source.x; })
-          .attr("y1", function (d) { return d.source.y; })
-          .attr("x2", function (d) { return d.target.x; })
-          .attr("y2", function (d) { return d.target.y; });
-        node2.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
+
+      useNodes.forEach(function (n) {
+        var r = nodeRadius(n);
+        var shape = nodeLayer.append(n.type === "organization" ? "rect" : "circle")
+          .attr("fill", n.type === "organization" ? "#1d5f3f" : "#2a4c65")
+          .attr("stroke", n.isCore ? "#d9f3ff" : "#8aa0b2")
+          .attr("stroke-width", n.isCore ? 1.6 : 0.9)
+          .attr("filter", "url(#nodeGlow)")
+          .style("cursor", "pointer");
+        if (n.type === "organization") {
+          shape.attr("x", n.x - r).attr("y", n.y - r).attr("width", r * 2).attr("height", r * 2).attr("rx", 7);
+        } else {
+          shape.attr("cx", n.x).attr("cy", n.y).attr("r", r);
+        }
+        shape.on("click", function () {
+          var rel = edges.filter(function (e) { return e.source === n.id || e.target === n.id; });
+          var ev = [];
+          rel.forEach(function (e) { (e.evidenceIds || []).forEach(function (id) { ev.push(id); }); });
+          setDetail([
+            "Node: " + n.label,
+            n.description || "",
+            "Visible relationships: " + rel.length
+          ].concat(evidenceLines(ev)));
+        });
       });
+
+      useNodes
+        .slice()
+        .sort(function (a, b) { return (b.type === "organization") - (a.type === "organization") || (b.degree || 0) - (a.degree || 0); })
+        .forEach(function (n) {
+          labelLayer.append("text")
+            .attr("x", n.x + nodeRadius(n) + 4)
+            .attr("y", n.y + 3)
+            .attr("font-size", n.type === "organization" ? 11 : 9)
+            .attr("font-weight", n.type === "organization" ? 600 : 500)
+            .attr("fill", "#b8cad7")
+            .attr("paint-order", "stroke")
+            .attr("stroke", "#0a1016")
+            .attr("stroke-width", 3)
+            .text(n.label);
+        });
+
+      setDetail(["Relationships view loaded.", "Click an edge or node to inspect evidence."]);
+    }
+    function renderGoals() {
+      var holder = document.getElementById("viz-matrix");
+      holder.innerHTML = "";
+      var topics = DATA.goals.topics;
+      var orgs = DATA.goals.organizations;
+      var header = ["Organization"].concat(topics.map(function (t) { return t.label; }));
+      header.forEach(function (h) { var d = document.createElement("div"); d.className = "m-head"; d.textContent = h; holder.appendChild(d); });
+      orgs.forEach(function (org) {
+        var r = document.createElement("div"); r.className = "m-row"; r.textContent = org.label; holder.appendChild(r);
+        topics.forEach(function (topic) {
+          var key = org.id + "|" + topic.id;
+          var cell = goalByKey.get(key);
+          var div = document.createElement("div");
+          if (!cell || (cell.official && !state.goalShowOfficial) || (!cell.official && !state.goalShowInferred)) {
+            div.className = "m-cell";
+            div.innerHTML = "No strong signal<br/><span style='font-size:10px;color:#8ea1b3'>No retained evidence in this view.</span>";
+            holder.appendChild(div); return;
+          }
+          var stance = String(cell.label || "").toLowerCase();
+          var cls = "m-associated";
+          if (stance === "aligned") cls = "m-aligned";
+          else if (stance === "responds") cls = "m-responds";
+          else if (stance === "contested") cls = "m-contested";
+          else if (stance === "drives") cls = "m-drives";
+          else if (stance === "monitors") cls = "m-monitors";
+          else if (stance === "associated") cls = "m-associated";
+          div.className = "m-cell " + cls;
+          div.style.cursor = "pointer";
+          div.innerHTML = "<strong>" + cell.label + "</strong><br/><span style='font-size:10px;color:#9bb0bf'>" + (cell.official ? "F" : "I") + " " + Number(cell.confidence || 0).toFixed(2) + "</span>";
+          div.addEventListener("click", function () {
+            setDetail([
+              org.label + " × " + topic.label,
+              cell.summary || "",
+              "Stance: " + cell.label,
+              "Confidence: " + Number(cell.confidence || 0).toFixed(2),
+              "Type: " + (cell.official ? "official" : "inferred / weak")
+            ].concat(evidenceLines(cell.evidenceIds)));
+          });
+          holder.appendChild(div);
+        });
+      });
+      setDetail(["Goals matrix loaded.", "Click a cell to inspect evidence details."]);
+    }
+    function renderCurrentView() {
+      document.getElementById("view-rel").classList.toggle("hidden", state.view !== "rel");
+      document.getElementById("view-goal").classList.toggle("hidden", state.view !== "goal");
+      document.getElementById("ctl-rel").classList.toggle("hidden", state.view !== "rel");
+      document.getElementById("ctl-goal").classList.toggle("hidden", state.view !== "goal");
+      document.getElementById("tab-rel").classList.toggle("active", state.view === "rel");
+      document.getElementById("tab-goal").classList.toggle("active", state.view === "goal");
+      if (state.view === "rel") renderRel(); else renderGoals();
+    }
+    function bindEvents() {
+      document.getElementById("tab-rel").addEventListener("click", function () { state.view = "rel"; renderCurrentView(); });
+      document.getElementById("tab-goal").addEventListener("click", function () { state.view = "goal"; renderCurrentView(); });
+      document.getElementById("search").addEventListener("input", function (e) { state.search = e.target.value || ""; if (state.view === "rel") renderRel(); });
+      document.getElementById("focus").addEventListener("change", function (e) { state.focus = e.target.value || ""; if (state.view === "rel") renderRel(); });
+      document.getElementById("t-off").addEventListener("change", function (e) { state.showOfficial = e.target.checked; if (state.view === "rel") renderRel(); });
+      document.getElementById("t-unoff").addEventListener("change", function (e) { state.showUnofficial = e.target.checked; if (state.view === "rel") renderRel(); });
+      document.getElementById("t-conf").addEventListener("change", function (e) { state.showConflict = e.target.checked; if (state.view === "rel") renderRel(); });
+      document.getElementById("t-loc").addEventListener("change", function (e) { state.showWeak = e.target.checked; if (state.view === "rel") renderRel(); });
+      document.getElementById("g-official").addEventListener("change", function (e) { state.goalShowOfficial = e.target.checked; if (state.view === "goal") renderGoals(); });
+      document.getElementById("g-inferred").addEventListener("change", function (e) { state.goalShowInferred = e.target.checked; if (state.view === "goal") renderGoals(); });
+      document.getElementById("preset-all").addEventListener("click", function () { state.focus = ""; state.search = ""; state.showOfficial = state.showUnofficial = state.showConflict = state.showWeak = true; document.getElementById("focus").value = ""; document.getElementById("search").value = ""; document.getElementById("t-off").checked = document.getElementById("t-unoff").checked = document.getElementById("t-conf").checked = document.getElementById("t-loc").checked = true; renderRel(); });
+      document.getElementById("preset-official").addEventListener("click", function () { state.focus = ""; state.search = ""; state.showOfficial = true; state.showUnofficial = state.showConflict = state.showWeak = false; document.getElementById("focus").value = ""; document.getElementById("search").value = ""; document.getElementById("t-off").checked = true; document.getElementById("t-unoff").checked = document.getElementById("t-conf").checked = document.getElementById("t-loc").checked = false; renderRel(); });
+      document.getElementById("preset-risk").addEventListener("click", function () { state.focus = "org:pok"; state.search = ""; state.showOfficial = false; state.showUnofficial = state.showConflict = state.showWeak = true; document.getElementById("focus").value = "org:pok"; document.getElementById("search").value = ""; document.getElementById("t-off").checked = false; document.getElementById("t-unoff").checked = document.getElementById("t-conf").checked = document.getElementById("t-loc").checked = true; renderRel(); });
+    }
+    fetch(MC1PORTAL.resolve("data/task_c_reference_data.json")).then(function (r) { return r.json(); }).then(function (d) {
+      DATA = d;
+      DATA.relationships.nodes.forEach(function (n) { nodeById.set(n.id, n); });
+      DATA.evidence.forEach(function (e) { evidenceById.set(e.id, e); });
+      DATA.goals.cells.forEach(function (c) { goalByKey.set(c.orgId + "|" + c.topicId, c); });
+      renderStats();
+      fillFocus();
+      bindEvents();
+      renderCurrentView();
+    }).catch(function (err) {
+      setDetail(["Task C 数据加载失败", String(err)]);
     });
   </script>
 </body>
