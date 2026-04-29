@@ -73,6 +73,7 @@
     .line-legend .l-unoff::before { background:#e4b12e; }
     .line-legend .l-conf::before { background:#e45555; }
     .line-legend .l-weak::before { background:#3dd0e0; }
+    .viz-tools { margin: 0 0 0.6rem; display:flex; gap:0.5rem; }
     .timeline-wrap { margin-top: 0.7rem; }
     .timeline-wrap svg { height: 180px; width: 100%; }
     .matrix {
@@ -170,7 +171,10 @@
             <span class="l-conf">conflict</span>
             <span class="l-weak">weak / inferred</span>
           </div>
-          <div id="viz-rel" class="viz-wrap" style="min-height:620px"></div>
+          <div class="viz-tools">
+            <button id="resetView" class="btn-c" type="button">重置视图</button>
+          </div>
+          <div id="viz-rel" class="viz-wrap" style="min-height:720px"></div>
         </div>
         <div id="view-goal" class="hidden">
           <div class="legend-c">Goals Matrix（组织 × 议题：Economic / Environmental / Security / Militancy）</div>
@@ -263,7 +267,7 @@
         wrap.innerHTML = '<div class="caption">No visible relationships under current filters.</div>';
         return;
       }
-      var W = wrap.clientWidth || 760, H = 540;
+      var W = wrap.clientWidth || 760, H = 700;
       var designW = 1380, designH = 860;
       var svg = d3.select("#viz-rel").append("svg")
         .attr("width", W).attr("height", H)
@@ -271,14 +275,11 @@
         .attr("preserveAspectRatio", "xMidYMid meet");
 
       var defs = svg.append("defs");
-      var grad = defs.append("linearGradient").attr("id", "relBg").attr("x1", "0%").attr("y1", "0%").attr("x2", "0%").attr("y2", "100%");
-      grad.append("stop").attr("offset", "0%").attr("stop-color", "#0f1720");
-      grad.append("stop").attr("offset", "100%").attr("stop-color", "#0a0f14");
       defs.append("filter").attr("id", "nodeGlow")
         .append("feDropShadow")
         .attr("dx", "0").attr("dy", "0").attr("stdDeviation", "2.2")
         .attr("flood-color", "#5ea7c7").attr("flood-opacity", "0.35");
-      svg.append("rect").attr("x", 0).attr("y", 0).attr("width", designW).attr("height", designH).attr("fill", "url(#relBg)");
+      // 不在 SVG 里画背景板，直接复用容器背景，避免出现“SVG区域一色/容器区域一色”的分界线。
 
       var plotLayer = svg.append("g");
       var edgeLayer = plotLayer.append("g");
@@ -376,7 +377,26 @@
       var scale = Math.max(0.6, Math.min(2.2, Math.min(sx, sy)));
       var tx = pad - minX * scale + (designW - (bw * scale + pad * 2)) / 2;
       var ty = pad - minY * scale + (designH - (bh * scale + pad * 2)) / 2;
-      plotLayer.attr("transform", "translate(" + tx + "," + ty + ") scale(" + scale + ")");
+      var baseTransform = d3.zoomIdentity.translate(tx, ty).scale(scale);
+      plotLayer.attr("transform", baseTransform.toString());
+
+      // 动态交互：滚轮缩放 + 拖拽平移
+      var zoom = d3.zoom()
+        .scaleExtent([0.5, 6])
+        .on("zoom", function (event) {
+          var t = event.transform;
+          var merged = d3.zoomIdentity
+            .translate(baseTransform.x + t.x, baseTransform.y + t.y)
+            .scale(baseTransform.k * t.k);
+          plotLayer.attr("transform", merged.toString());
+        });
+      svg.call(zoom).call(zoom.transform, d3.zoomIdentity);
+      var resetBtn = document.getElementById("resetView");
+      if (resetBtn) {
+        resetBtn.onclick = function () {
+          svg.transition().duration(280).call(zoom.transform, d3.zoomIdentity);
+        };
+      }
 
       setDetail(["Relationships view loaded.", "Click an edge or node to inspect evidence."]);
     }
