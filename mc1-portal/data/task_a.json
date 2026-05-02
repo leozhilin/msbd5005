@@ -1,1 +1,623 @@
-{"firstPublishShare":[{"source":"International News","share":1.0,"firstCount":20,"topicCount":20},{"source":"All News Today","share":1.0,"firstCount":17,"topicCount":17},{"source":"World Source","share":1.0,"firstCount":8,"topicCount":8},{"source":"News Online Today","share":0.8625,"firstCount":69,"topicCount":80},{"source":"Central Bulletin","share":0.8,"firstCount":16,"topicCount":20},{"source":"Who What News","share":0.7857142857142857,"firstCount":11,"topicCount":14},{"source":"The Explainer","share":0.75,"firstCount":3,"topicCount":4},{"source":"Everyday News","share":0.6666666666666666,"firstCount":2,"topicCount":3},{"source":"World Journal","share":0.6666666666666666,"firstCount":2,"topicCount":3},{"source":"The Continent","share":0.5,"firstCount":1,"topicCount":2},{"source":"The Light of Truth","share":0.5,"firstCount":1,"topicCount":2},{"source":"Daily Pegasus","share":0.3333333333333333,"firstCount":1,"topicCount":3},{"source":"Athena Speaks","share":0.0,"firstCount":0,"topicCount":3},{"source":"News Desk","share":0.0,"firstCount":0,"topicCount":1},{"source":"The General Post","share":0.0,"firstCount":0,"topicCount":1},{"source":"The Orb","share":0.0,"firstCount":0,"topicCount":1}],"avgLagDays":[{"source":"Athena Speaks","avgLag":1.3333333333333333,"topicCount":3},{"source":"Daily Pegasus","avgLag":1.3333333333333333,"topicCount":3},{"source":"News Desk","avgLag":1.0,"topicCount":1},{"source":"The General Post","avgLag":1.0,"topicCount":1},{"source":"The Orb","avgLag":1.0,"topicCount":1},{"source":"The Continent","avgLag":0.5,"topicCount":2},{"source":"The Explainer","avgLag":0.5,"topicCount":4},{"source":"The Light of Truth","avgLag":0.5,"topicCount":2},{"source":"Everyday News","avgLag":0.3333333333333333,"topicCount":3},{"source":"World Journal","avgLag":0.3333333333333333,"topicCount":3},{"source":"Who What News","avgLag":0.21428571428571427,"topicCount":14},{"source":"Central Bulletin","avgLag":0.2,"topicCount":20},{"source":"News Online Today","avgLag":0.1375,"topicCount":80},{"source":"All News Today","avgLag":0.0,"topicCount":17},{"source":"International News","avgLag":0.0,"topicCount":20},{"source":"World Source","avgLag":0.0,"topicCount":8}],"directedLeadFollow":{"nodes":[{"id":"All News Today","firstCount":17,"topicCount":17,"firstShare":1.0,"avgLag":0.0},{"id":"Athena Speaks","firstCount":0,"topicCount":3,"firstShare":0.0,"avgLag":1.3333333333333333},{"id":"Central Bulletin","firstCount":16,"topicCount":20,"firstShare":0.8,"avgLag":0.2},{"id":"Daily Pegasus","firstCount":1,"topicCount":3,"firstShare":0.3333333333333333,"avgLag":1.3333333333333333},{"id":"Everyday News","firstCount":2,"topicCount":3,"firstShare":0.6666666666666666,"avgLag":0.3333333333333333},{"id":"International News","firstCount":20,"topicCount":20,"firstShare":1.0,"avgLag":0.0},{"id":"News Desk","firstCount":0,"topicCount":1,"firstShare":0.0,"avgLag":1.0},{"id":"News Online Today","firstCount":69,"topicCount":80,"firstShare":0.8625,"avgLag":0.1375},{"id":"The Continent","firstCount":1,"topicCount":2,"firstShare":0.5,"avgLag":0.5},{"id":"The Explainer","firstCount":3,"topicCount":4,"firstShare":0.75,"avgLag":0.5},{"id":"The General Post","firstCount":0,"topicCount":1,"firstShare":0.0,"avgLag":1.0},{"id":"The Light of Truth","firstCount":1,"topicCount":2,"firstShare":0.5,"avgLag":0.5},{"id":"The Orb","firstCount":0,"topicCount":1,"firstShare":0.0,"avgLag":1.0},{"id":"Who What News","firstCount":11,"topicCount":14,"firstShare":0.7857142857142857,"avgLag":0.21428571428571427},{"id":"World Journal","firstCount":2,"topicCount":3,"firstShare":0.6666666666666666,"avgLag":0.3333333333333333},{"id":"World Source","firstCount":8,"topicCount":8,"firstShare":1.0,"avgLag":0.0}],"links":[{"source":"All News Today","target":"News Online Today","weight":4},{"source":"News Online Today","target":"Central Bulletin","weight":4},{"source":"World Source","target":"News Online Today","weight":3},{"source":"News Online Today","target":"Who What News","weight":3},{"source":"News Online Today","target":"Daily Pegasus","weight":2},{"source":"Central Bulletin","target":"Athena Speaks","weight":2},{"source":"International News","target":"News Online Today","weight":2},{"source":"All News Today","target":"Daily Pegasus","weight":1},{"source":"The Explainer","target":"Athena Speaks","weight":1},{"source":"Athena Speaks","target":"The Explainer","weight":1},{"source":"Central Bulletin","target":"News Online Today","weight":1},{"source":"Central Bulletin","target":"The Explainer","weight":1},{"source":"News Online Today","target":"The Explainer","weight":1},{"source":"News Online Today","target":"Athena Speaks","weight":1},{"source":"Central Bulletin","target":"News Desk","weight":1},{"source":"News Online Today","target":"News Desk","weight":1},{"source":"The Explainer","target":"News Desk","weight":1},{"source":"Daily Pegasus","target":"The Orb","weight":1},{"source":"News Online Today","target":"Everyday News","weight":1},{"source":"World Source","target":"Everyday News","weight":1},{"source":"News Online Today","target":"The Continent","weight":1},{"source":"News Online Today","target":"World Journal","weight":1},{"source":"World Source","target":"The Continent","weight":1},{"source":"World Source","target":"World Journal","weight":1},{"source":"News Online Today","target":"The Light of Truth","weight":1},{"source":"Who What News","target":"The Light of Truth","weight":1},{"source":"Who What News","target":"News Online Today","weight":1},{"source":"The Light of Truth","target":"The General Post","weight":1}]},"stats":{"rawArticlesUsable":526,"coTopicGroups":85},"methodNote":"Task A 基于 MC1/News Articles 原始 .txt 自动提取 SOURCE/TITLE/PUBLISHED；以归一化标题形成同题组，在组内按最早日期统计首发占比、平均跟发延迟及 A→B（A 早于 B）方向边。该方法提供传播线索，不等同显式转载证明。"}
+{
+  "fig1": {
+    "sources": [
+      {
+        "outlet": "Homeland Illumination",
+        "country": "Kronos",
+        "language": "English",
+        "articles": 64,
+        "focus": "POK / Env. investigation / Gov. corruption",
+        "type": "Primary"
+      },
+      {
+        "outlet": "Kronos Star",
+        "country": "Kronos",
+        "language": "English",
+        "articles": 62,
+        "focus": "POK protests / Police clashes",
+        "type": "Primary"
+      },
+      {
+        "outlet": "The Abila Post",
+        "country": "Kronos",
+        "language": "English",
+        "articles": 54,
+        "focus": "POK / Arrest records / Kidnapping",
+        "type": "Primary"
+      },
+      {
+        "outlet": "Central Bulletin",
+        "country": "Kronos",
+        "language": "English",
+        "articles": 21,
+        "focus": "POK / Arrest records / Kidnapping",
+        "type": "Primary"
+      },
+      {
+        "outlet": "International News",
+        "country": "Kronos (intl.)",
+        "language": "English",
+        "articles": 20,
+        "focus": "POK violence / Pro-police stance",
+        "type": "Primary"
+      },
+      {
+        "outlet": "The World",
+        "country": "Tethys",
+        "language": "English",
+        "articles": 17,
+        "focus": "GAStech corp. news / IPO / Sanjorge",
+        "type": "Primary"
+      },
+      {
+        "outlet": "International Times",
+        "country": "Global",
+        "language": "English",
+        "articles": 14,
+        "focus": "Intl. affairs / CEO interviews / Drugs",
+        "type": "Primary"
+      },
+      {
+        "outlet": "World Source",
+        "country": "Tethys / Global",
+        "language": "English",
+        "articles": 9,
+        "focus": "Gas industry / Offshore development",
+        "type": "Primary"
+      },
+      {
+        "outlet": "All News Today",
+        "country": "Kronos",
+        "language": "English",
+        "articles": 18,
+        "focus": "POK / Environment (mixed)",
+        "type": "Derivative*"
+      },
+      {
+        "outlet": "Who What News",
+        "country": "Kronos / Tethys",
+        "language": "English",
+        "articles": 15,
+        "focus": "GAStech kidnapping / Corp. statements",
+        "type": "Derivative*"
+      },
+      {
+        "outlet": "News Online Today",
+        "country": "Kronos / Tethys",
+        "language": "English",
+        "articles": 111,
+        "focus": "Aggregated / Reprinted news",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "Centrum Sentinel",
+        "country": "Tethys",
+        "language": "Italian (MT)",
+        "articles": 36,
+        "focus": "Kidnapping live blog",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "Tethys News",
+        "country": "Tethys",
+        "language": "Italian (MT)",
+        "articles": 35,
+        "focus": "Kidnapping live updates",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "Modern Rubicon",
+        "country": "Kronos",
+        "language": "Italian (MT)",
+        "articles": 30,
+        "focus": "Kidnapping live blog",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "Worldwise",
+        "country": "Kronos",
+        "language": "French (MT)",
+        "articles": 28,
+        "focus": "POK protests / Pro-gov. stance",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "The Guide",
+        "country": "Kronos",
+        "language": "Spanish (MT)",
+        "articles": 28,
+        "focus": "POK protests / Kidnapping",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "The Truth",
+        "country": "Kronos",
+        "language": "Dutch (MT)",
+        "articles": 28,
+        "focus": "POK protests / Police clashes",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "The Orb",
+        "country": "Kronos",
+        "language": "French (MT)",
+        "articles": 26,
+        "focus": "POK / Env. investigation",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "Daily Pegasus",
+        "country": "Kronos",
+        "language": "Spanish (MT)",
+        "articles": 26,
+        "focus": "GAStech env. / POK rallies",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "The Wrap",
+        "country": "Kronos",
+        "language": "Dutch (MT)",
+        "articles": 26,
+        "focus": "POK / Env. investigation / Protests",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "Athena Speaks",
+        "country": "Kronos",
+        "language": "French (MT)",
+        "articles": 25,
+        "focus": "POK / Arrest records",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "The Explainer",
+        "country": "Kronos",
+        "language": "Spanish (MT)",
+        "articles": 25,
+        "focus": "POK explainer / Arrest records",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "News Desk",
+        "country": "Kronos",
+        "language": "Dutch (MT)",
+        "articles": 25,
+        "focus": "POK / Gov. pollution report",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "The Light of Truth",
+        "country": "Tethys",
+        "language": "French (MT)",
+        "articles": 19,
+        "focus": "GAStech corp. stance / IPO",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "The General Post",
+        "country": "Tethys",
+        "language": "Spanish (MT)",
+        "articles": 19,
+        "focus": "GAStech corp. statements",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "The Tulip",
+        "country": "Tethys",
+        "language": "Dutch (MT)",
+        "articles": 19,
+        "focus": "GAStech corp. news / Sanjorge",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "World Journal",
+        "country": "Kronos / Global",
+        "language": "French (MT)",
+        "articles": 15,
+        "focus": "Drugs / CEO interviews / Gas",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "Everyday News",
+        "country": "Kronos / Global",
+        "language": "Spanish (MT)",
+        "articles": 15,
+        "focus": "Drugs / Gas industry / CEO",
+        "type": "Derivative"
+      },
+      {
+        "outlet": "The Continent",
+        "country": "Tethys / Europe",
+        "language": "Dutch (MT)",
+        "articles": 15,
+        "focus": "GAStech business / Intl. rescue",
+        "type": "Derivative"
+      }
+    ]
+  },
+  "fig2": {
+    "nodes": [
+      {
+        "id": "Homeland Illumination",
+        "type": "Primary",
+        "lang": "",
+        "articles": 64
+      },
+      {
+        "id": "Kronos Star",
+        "type": "Primary",
+        "lang": "",
+        "articles": 62
+      },
+      {
+        "id": "The Abila Post",
+        "type": "Primary",
+        "lang": "",
+        "articles": 54
+      },
+      {
+        "id": "Central Bulletin",
+        "type": "Primary",
+        "lang": "",
+        "articles": 21
+      },
+      {
+        "id": "International News",
+        "type": "Primary",
+        "lang": "",
+        "articles": 20
+      },
+      {
+        "id": "International Times",
+        "type": "Primary",
+        "lang": "",
+        "articles": 14
+      },
+      {
+        "id": "The World",
+        "type": "Primary",
+        "lang": "",
+        "articles": 17
+      },
+      {
+        "id": "World Source",
+        "type": "Primary",
+        "lang": "",
+        "articles": 9
+      },
+      {
+        "id": "All News Today",
+        "type": "Derivative*",
+        "lang": "English (Deriv.)",
+        "articles": 18
+      },
+      {
+        "id": "Athena Speaks",
+        "type": "Derivative",
+        "lang": "French (MT)",
+        "articles": 25
+      },
+      {
+        "id": "Centrum Sentinel",
+        "type": "Derivative",
+        "lang": "Italian (MT)",
+        "articles": 36
+      },
+      {
+        "id": "Daily Pegasus",
+        "type": "Derivative",
+        "lang": "Spanish (MT)",
+        "articles": 26
+      },
+      {
+        "id": "Everyday News",
+        "type": "Derivative",
+        "lang": "Spanish (MT)",
+        "articles": 15
+      },
+      {
+        "id": "Modern Rubicon",
+        "type": "Derivative",
+        "lang": "Italian (MT)",
+        "articles": 30
+      },
+      {
+        "id": "News Desk",
+        "type": "Derivative",
+        "lang": "Dutch (MT)",
+        "articles": 25
+      },
+      {
+        "id": "News Online Today",
+        "type": "Derivative",
+        "lang": "English (Deriv.)",
+        "articles": 111
+      },
+      {
+        "id": "Tethys News",
+        "type": "Derivative",
+        "lang": "Italian (MT)",
+        "articles": 35
+      },
+      {
+        "id": "The Continent",
+        "type": "Derivative",
+        "lang": "Dutch (MT)",
+        "articles": 15
+      },
+      {
+        "id": "The Explainer",
+        "type": "Derivative",
+        "lang": "Spanish (MT)",
+        "articles": 25
+      },
+      {
+        "id": "The General Post",
+        "type": "Derivative",
+        "lang": "Spanish (MT)",
+        "articles": 19
+      },
+      {
+        "id": "The Guide",
+        "type": "Derivative",
+        "lang": "Spanish (MT)",
+        "articles": 28
+      },
+      {
+        "id": "The Light of Truth",
+        "type": "Derivative",
+        "lang": "French (MT)",
+        "articles": 19
+      },
+      {
+        "id": "The Orb",
+        "type": "Derivative",
+        "lang": "French (MT)",
+        "articles": 26
+      },
+      {
+        "id": "The Truth",
+        "type": "Derivative",
+        "lang": "Dutch (MT)",
+        "articles": 28
+      },
+      {
+        "id": "The Tulip",
+        "type": "Derivative",
+        "lang": "Dutch (MT)",
+        "articles": 19
+      },
+      {
+        "id": "The Wrap",
+        "type": "Derivative",
+        "lang": "Dutch (MT)",
+        "articles": 26
+      },
+      {
+        "id": "Who What News",
+        "type": "Derivative*",
+        "lang": "English (Deriv.)",
+        "articles": 15
+      },
+      {
+        "id": "World Journal",
+        "type": "Derivative",
+        "lang": "French (MT)",
+        "articles": 15
+      },
+      {
+        "id": "Worldwise",
+        "type": "Derivative",
+        "lang": "French (MT)",
+        "articles": 28
+      }
+    ],
+    "links": [
+      {
+        "source": "The World",
+        "target": "News Online Today",
+        "weight": 25,
+        "weightNorm": 0.714
+      },
+      {
+        "source": "Homeland Illumination",
+        "target": "News Online Today",
+        "weight": 23,
+        "weightNorm": 0.657
+      },
+      {
+        "source": "The Abila Post",
+        "target": "Athena Speaks",
+        "weight": 21,
+        "weightNorm": 0.6
+      },
+      {
+        "source": "Central Bulletin",
+        "target": "Athena Speaks",
+        "weight": 2,
+        "weightNorm": 0.057
+      },
+      {
+        "source": "Homeland Illumination",
+        "target": "The Orb",
+        "weight": 24,
+        "weightNorm": 0.686
+      },
+      {
+        "source": "Kronos Star",
+        "target": "Worldwise",
+        "weight": 27,
+        "weightNorm": 0.771
+      },
+      {
+        "source": "The World",
+        "target": "Worldwise",
+        "weight": 2,
+        "weightNorm": 0.057
+      },
+      {
+        "source": "The World",
+        "target": "The Light of Truth",
+        "weight": 25,
+        "weightNorm": 0.714
+      },
+      {
+        "source": "International Times",
+        "target": "World Journal",
+        "weight": 13,
+        "weightNorm": 0.371
+      },
+      {
+        "source": "The World",
+        "target": "World Journal",
+        "weight": 4,
+        "weightNorm": 0.114
+      },
+      {
+        "source": "Homeland Illumination",
+        "target": "Daily Pegasus",
+        "weight": 24,
+        "weightNorm": 0.686
+      },
+      {
+        "source": "The Abila Post",
+        "target": "The Explainer",
+        "weight": 21,
+        "weightNorm": 0.6
+      },
+      {
+        "source": "Central Bulletin",
+        "target": "The Explainer",
+        "weight": 2,
+        "weightNorm": 0.057
+      },
+      {
+        "source": "Kronos Star",
+        "target": "The Guide",
+        "weight": 27,
+        "weightNorm": 0.771
+      },
+      {
+        "source": "The World",
+        "target": "The Guide",
+        "weight": 2,
+        "weightNorm": 0.057
+      },
+      {
+        "source": "International Times",
+        "target": "Everyday News",
+        "weight": 13,
+        "weightNorm": 0.371
+      },
+      {
+        "source": "The World",
+        "target": "Everyday News",
+        "weight": 6,
+        "weightNorm": 0.171
+      },
+      {
+        "source": "The World",
+        "target": "The General Post",
+        "weight": 25,
+        "weightNorm": 0.714
+      },
+      {
+        "source": "Homeland Illumination",
+        "target": "The Wrap",
+        "weight": 24,
+        "weightNorm": 0.686
+      },
+      {
+        "source": "Kronos Star",
+        "target": "The Truth",
+        "weight": 27,
+        "weightNorm": 0.771
+      },
+      {
+        "source": "The World",
+        "target": "The Truth",
+        "weight": 2,
+        "weightNorm": 0.057
+      },
+      {
+        "source": "The Abila Post",
+        "target": "News Desk",
+        "weight": 21,
+        "weightNorm": 0.6
+      },
+      {
+        "source": "Central Bulletin",
+        "target": "News Desk",
+        "weight": 2,
+        "weightNorm": 0.057
+      },
+      {
+        "source": "The World",
+        "target": "The Tulip",
+        "weight": 21,
+        "weightNorm": 0.6
+      },
+      {
+        "source": "International Times",
+        "target": "The Continent",
+        "weight": 13,
+        "weightNorm": 0.371
+      },
+      {
+        "source": "The World",
+        "target": "The Continent",
+        "weight": 6,
+        "weightNorm": 0.171
+      },
+      {
+        "source": "Homeland Illumination",
+        "target": "Centrum Sentinel",
+        "weight": 35,
+        "weightNorm": 1.0
+      },
+      {
+        "source": "Homeland Illumination",
+        "target": "Modern Rubicon",
+        "weight": 6,
+        "weightNorm": 0.171
+      },
+      {
+        "source": "The Abila Post",
+        "target": "Modern Rubicon",
+        "weight": 2,
+        "weightNorm": 0.057
+      },
+      {
+        "source": "Kronos Star",
+        "target": "Tethys News",
+        "weight": 35,
+        "weightNorm": 1.0
+      },
+      {
+        "source": "Homeland Illumination",
+        "target": "All News Today",
+        "weight": 18,
+        "weightNorm": 0.514
+      },
+      {
+        "source": "The World",
+        "target": "Who What News",
+        "weight": 16,
+        "weightNorm": 0.457
+      },
+      {
+        "source": "The Abila Post",
+        "target": "Who What News",
+        "weight": 1,
+        "weightNorm": 0.029
+      }
+    ]
+  },
+  "methodNote": "Fig1: News source classification (Primary vs Derivative vs Derivative*). Fig2: Inferred information flow network — edges based on Jaccard content similarity with ≤14-day temporal window + explicit citation keywords; no heuristic fallback. Arrow thickness = number of inferred article-level matches. These methods provide propagation clues, not explicit reprint proof.",
+  "stats": {
+    "totalArticles": 845,
+    "datedArticles": 805,
+    "networkNodes": 29,
+    "networkLinks": 33
+  }
+}

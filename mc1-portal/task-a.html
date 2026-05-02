@@ -7,6 +7,66 @@
   <link rel="stylesheet" href="css/cia-theme.css" />
   <script src="js/paths.js"></script>
   <script src="vendor/d3.v7.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/d3@7.9.0/dist/d3.min.js'"></script>
+  <style>
+    /* ── Fig1: Classification Table ── */
+    .fig1-table { width:100%; border-collapse:collapse; font-size:12px; font-family:var(--font-m); }
+    .fig1-table th {
+      background:#1a222d; color:#e0c97f; text-transform:uppercase; letter-spacing:0.08em;
+      padding:7px 10px; border-bottom:2px solid #2a3a42; text-align:left; font-size:11px;
+    }
+    .fig1-table td { padding:5px 10px; border-bottom:1px solid #1e2a35; color:var(--text); }
+    .fig1-table tr:hover td { background:#141a24; }
+    .fig1-table .type-primary td { border-left:3px solid #2563EB; }
+    .fig1-table .type-mixed td   { border-left:3px solid #F59E0B; }
+    .fig1-table .type-deriv td   { border-left:3px solid #DC2626; }
+    .fig1-table .sep-row td { border-top:2px dashed #2a3a42; padding-top:10px; }
+    .type-badge {
+      display:inline-block; padding:1px 7px; border-radius:8px;
+      font-size:10px; font-weight:600; color:#fff; letter-spacing:0.04em;
+    }
+    .type-badge.primary  { background:#2563EB; }
+    .type-badge.mixed    { background:#F59E0B; }
+    .type-badge.deriv    { background:#DC2626; }
+
+    /* ── Fig2: Interactive Network ── */
+    .fig2-wrap { position:relative; min-height:620px; background:#080a0c; border:1px solid var(--border); overflow:hidden; }
+    .fig2-wrap svg { display:block; }
+    .fig2-sidebar {
+      position:absolute; top:0; right:0; width:260px; height:100%;
+      background:rgba(11,13,16,0.92); border-left:1px solid var(--border);
+      padding:14px; overflow-y:auto; font-size:12px; color:var(--text);
+      pointer-events:auto; z-index:10;
+    }
+    .fig2-sidebar h3 { font-size:13px; color:var(--accent); margin:0 0 8px; }
+    .fig2-sidebar .badge {
+      display:inline-block; padding:1px 8px; border-radius:10px;
+      font-size:10px; font-weight:600; color:#fff; margin-bottom:6px;
+    }
+    .fig2-sidebar .label { font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:0.5px; }
+    .fig2-sidebar .value { font-size:14px; font-weight:600; margin-bottom:6px; }
+    .fig2-sidebar h4 { font-size:11px; color:var(--dim); margin:10px 0 4px; text-transform:uppercase; letter-spacing:0.5px; }
+    .fig2-sidebar ul { list-style:none; padding:0; margin:0; }
+    .fig2-sidebar li { padding:3px 6px; margin-bottom:2px; border-radius:3px; cursor:pointer; font-size:11px; }
+    .fig2-sidebar li:hover { background:#1e2a35; }
+    .fig2-legend { margin-top:16px; border-top:1px solid var(--border); padding-top:10px; }
+    .fig2-legend-item { display:flex; align-items:center; gap:6px; margin-bottom:4px; font-size:11px; }
+    .fig2-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .fig2-line { width:20px; height:2px; background:#64748B; flex-shrink:0; }
+    .fig2-hint {
+      position:absolute; bottom:12px; left:50%; transform:translateX(-50%);
+      background:rgba(30,41,59,0.85); color:#fff; padding:5px 14px;
+      border-radius:14px; font-size:11px; pointer-events:none; transition:opacity 0.3s;
+    }
+    /* Node / Link interaction classes */
+    .node-dimmed circle, .node-dimmed text { opacity:0.12; }
+    .link-dimmed { stroke:#2a3a42 !important; stroke-opacity:0.2 !important; stroke-width:1px !important; filter:none !important; }
+    .highlighted-link { stroke:#3dd0e0 !important; stroke-opacity:1 !important; stroke-width:3.5px !important; filter:drop-shadow(0 0 5px rgba(61,208,224,0.5)); }
+    .highlighted-reverse { stroke:#e45555 !important; stroke-opacity:1 !important; stroke-width:3.5px !important; filter:drop-shadow(0 0 5px rgba(228,85,85,0.5)); }
+    .node-highlighted circle { stroke-width:3px; stroke:#fff !important; }
+
+    /* ── Fig3: Heatmap Image ── */
+    .fig3-img { width:100%; max-width:900px; display:block; margin:0 auto; border:1px solid var(--border); }
+  </style>
 </head>
 <body>
   <header class="site-nav">
@@ -22,272 +82,327 @@
     <div class="intel-header">
       <h1 class="dossier-h1">TASK A / 原始新闻源与传播线索</h1>
       <p class="mission-block" style="margin:0; border:0; padding:0">
-        基于 <code>MC1/News Articles</code> 原始文本抽取 <code>SOURCE / TITLE / PUBLISHED</code>：左侧给出首发占比与平均跟发延迟，右侧展示 A→B（A 更早出现）有向关系。可用控制区筛选边数量与权重，平衡清晰度与信息量。
+        基于 <code>MC1/News Articles</code> 原始文本抽取 <code>SOURCE / TITLE / PUBLISHED</code>：图1 给出新闻源分类表，图2 展示推断信息流有向网络（可交互），图3 为主题相似度热力图。
       </p>
     </div>
 
+    <!-- ── Figure 1 ── -->
     <div class="panel">
-      <h2>首发占比（越高越接近 primary 倾向）</h2>
-      <div class="viz-wrap" id="bar-a" style="min-height:420px"></div>
-    </div>
-
-    <div class="panel">
-      <h2>平均跟发延迟（天）</h2>
-      <div class="viz-wrap" id="lag-a" style="min-height:360px"></div>
-    </div>
-
-    <div class="panel">
-      <h2>有向 lead-follow 网络（A → B 表示 A 更早）</h2>
-      <div style="display:flex; flex-wrap:wrap; gap:0.8rem; margin-bottom:0.7rem; align-items:center">
-        <label style="font-size:12px; color:#9ab">显示边：</label>
-        <button type="button" class="btn-a" data-top="12">Top 12</button>
-        <button type="button" class="btn-a active" data-top="20">Top 20</button>
-        <button type="button" class="btn-a" data-top="9999">全部</button>
-        <label style="font-size:12px; color:#9ab; margin-left:0.6rem">最小权重</label>
-        <input id="w-a" type="range" min="1" max="8" value="1" step="1" />
-        <span id="w-a-v" style="font-size:12px; color:#9ab">≥1</span>
-        <button id="lbl-a" type="button" class="btn-a">显示边权标签</button>
+      <h2>图 1：新闻源分类表</h2>
+      <div style="display:flex;gap:18px;align-items:center;margin-bottom:8px;font-size:12px;flex-wrap:wrap">
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#2563EB;display:inline-block"></span> <b>Primary</b> — 原创报道源（独家采编）</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#F59E0B;display:inline-block"></span> <b>Mixed</b> — 混合型（既有原创也有转载）</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#DC2626;display:inline-block"></span> <b>Derivative</b> — 转载/二次报道源</span>
       </div>
-      <div class="viz-wrap" id="net-a" style="min-height:560px"></div>
-      <p class="caption" id="cap-a"></p>
+      <div class="viz-wrap" style="min-height:auto; padding:0; overflow-x:auto">
+        <table class="fig1-table" id="fig1-table">
+          <thead>
+            <tr>
+              <th>Outlet</th><th>Country / Region</th><th>Language</th>
+              <th>Articles</th><th>Main Focus</th><th>Source Type</th>
+            </tr>
+          </thead>
+          <tbody id="fig1-body"></tbody>
+        </table>
+      </div>
     </div>
-  </div>
 
-  <style>
-    .btn-a {
-      background: #121a20;
-      color: #9ab;
-      border: 1px solid #2a3a42;
-      padding: 0.35rem 0.6rem;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-    .btn-a.active {
-      color: #d7f8ff;
-      border-color: #3dd0e0;
-      background: #13212a;
-    }
-  </style>
+    <!-- ── Figure 2 ── -->
+    <div class="panel">
+      <h2>图 2：推断信息流网络（交互）</h2>
+      <p style="font-size:12px;color:var(--dim);margin-bottom:6px">
+        点击任意节点高亮其连接。连线表示 Primary 与 Derivative 之间的推断信息流关系（基于内容相似度 + ≤14天时间窗口）。连线越粗 = 推断匹配文章数越多。
+      </p>
+      <div class="fig2-wrap" id="fig2-wrap">
+        <svg id="fig2-svg"></svg>
+        <div class="fig2-hint" id="fig2-hint">点击节点探索连接</div>
+        <div class="fig2-sidebar" id="fig2-sidebar">
+          <h3>Node Info</h3>
+          <p style="color:var(--dim);font-size:11px">点击节点查看详情</p>
+          <div id="fig2-info"></div>
+          <div id="fig2-conn"></div>
+          <div class="fig2-legend">
+            <div class="fig2-legend-item"><div class="fig2-dot" style="background:#2563EB"></div> Primary (original reporting)</div>
+            <div class="fig2-legend-item"><div class="fig2-dot" style="background:#F59E0B"></div> Derivative* (mixed)</div>
+            <div class="fig2-legend-item"><div class="fig2-dot" style="background:#DC2626"></div> Derivative (translated/reprinted)</div>
+            <div class="fig2-legend-item"><div class="fig2-line"></div> Inferred connection (thicker = more matched articles)</div>
+            <p style="font-size:10px;color:var(--dim);margin-top:6px;font-style:italic">
+              Number in circle = total article count. Connections inferred from content similarity &amp; temporal ordering, not explicit citations.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Figure 3 ── -->
+    <div class="panel">
+      <h2>图 3：主题相似度热力图</h2>
+      <p style="font-size:12px;color:var(--dim);margin-bottom:6px">
+        基于 TF-IDF + 余弦相似度的 outlet 两两比较。仅显示下三角，对角线已遮蔽。每组内按相似度聚类排序。蓝色虚线框 = Primary-Derivative 跨块区域。
+      </p>
+      <div class="viz-wrap" style="min-height:auto; padding:8px; text-align:center">
+        <img class="fig3-img" id="fig3-img" alt="Similarity Heatmap" />
+      </div>
+    </div>
+
+    <p class="caption" id="cap-a"></p>
+  </div>
 
   <script>
   fetch(MC1PORTAL.resolve("data/task_a.json"))
     .then(function (r) { return r.json(); })
     .then(function (D) {
-      if (D.methodNote) document.getElementById("cap-a").textContent = D.methodNote;
       var st = D.stats || {};
       document.getElementById("cap-a").textContent =
         (D.methodNote || "") +
-        " | 可用原始新闻: " + (st.rawArticlesUsable || 0) +
-        " 篇；同题组: " + (st.coTopicGroups || 0) + " 组。";
+        " | 总文章: " + (st.totalArticles || 0) +
+        "；有日期: " + (st.datedArticles || 0) +
+        "；网络节点: " + (st.networkNodes || 0) +
+        "；网络边: " + (st.networkLinks || 0);
 
-      // ---- 图1：首发占比 ----
-      var fs = (D.firstPublishShare || []).slice(0, 18);
-      var W1 = document.getElementById("bar-a").clientWidth || 800;
-      var H1 = 400;
-      var m1 = { t: 18, r: 20, b: 130, l: 52 };
-      var x1 = d3.scaleBand().domain(fs.map(function (d) { return d.source; })).range([0, W1 - m1.l - m1.r]).padding(0.2);
-      var y1 = d3.scaleLinear().domain([0, 1]).range([H1 - m1.t - m1.b, 0]);
-      var svg1 = d3.select("#bar-a").append("svg").attr("width", W1).attr("height", H1);
-      var g1 = svg1.append("g").attr("transform", "translate(" + m1.l + "," + m1.t + ")");
-      g1.append("g").attr("class", "axis").attr("transform", "translate(0," + (H1 - m1.t - m1.b) + ")")
-        .call(d3.axisBottom(x1)).selectAll("text").style("text-anchor", "end").attr("dx", "-.6em").attr("dy", "0.3em").attr("transform", "rotate(-52)");
-      g1.append("g").attr("class", "axis").call(d3.axisLeft(y1).ticks(5).tickFormat(d3.format(".0%")));
-      g1.selectAll("rect").data(fs).enter().append("rect")
-        .attr("x", function (d) { return x1(d.source); })
-        .attr("y", function (d) { return y1(d.share); })
-        .attr("width", x1.bandwidth())
-        .attr("height", function (d) { return (H1 - m1.t - m1.b) - y1(d.share); })
-        .attr("fill", "#35c4d6")
-        .append("title")
-        .text(function (d) { return d.source + ": " + (d.share * 100).toFixed(1) + "%, first=" + d.firstCount + ", topics=" + d.topicCount; });
+      // ══════════════════════════════════════════
+      // FIGURE 1: Source Classification Table
+      // ══════════════════════════════════════════
+      var sources = (D.fig1 && D.fig1.sources) || [];
+      var tbody = document.getElementById("fig1-body");
+      var curType = "";
+      sources.forEach(function (s) {
+        var tr = document.createElement("tr");
+        var cls = s.type === "Primary" ? "type-primary" : s.type === "Derivative*" ? "type-mixed" : "type-deriv";
+        // separator between type groups
+        if (curType && curType !== s.type) tr.className = cls + " sep-row";
+        else tr.className = cls;
+        curType = s.type;
 
-      // ---- 图2：平均延迟 ----
-      var lag = (D.avgLagDays || []).slice().sort(function (a, b) { return b.avgLag - a.avgLag; }).slice(0, 16);
-      var W2 = document.getElementById("lag-a").clientWidth || 800;
-      var H2 = 340;
-      var m2 = { t: 12, r: 30, b: 24, l: 170 };
-      var x2 = d3.scaleLinear()
-        .domain([0, d3.max(lag, function (d) { return d.avgLag; }) * 1.1 || 1])
-        .range([0, W2 - m2.l - m2.r]);
-      var y2 = d3.scaleBand().domain(lag.map(function (d) { return d.source; })).range([0, H2 - m2.t - m2.b]).padding(0.2);
-      var svg2 = d3.select("#lag-a").append("svg").attr("width", W2).attr("height", H2);
-      var g2 = svg2.append("g").attr("transform", "translate(" + m2.l + "," + m2.t + ")");
-      g2.append("g").attr("class", "axis").call(d3.axisLeft(y2).tickSize(0));
-      g2.append("g").attr("class", "axis").attr("transform", "translate(0," + (H2 - m2.t - m2.b) + ")")
-        .call(d3.axisBottom(x2).ticks(6));
-      g2.selectAll("rect").data(lag).enter().append("rect")
-        .attr("x", 0).attr("y", function (d) { return y2(d.source); })
-        .attr("width", function (d) { return x2(d.avgLag); })
-        .attr("height", y2.bandwidth()).attr("fill", "#6abf69")
-        .append("title").text(function (d) { return d.source + ": " + d.avgLag.toFixed(2) + " days"; });
+        var badgeCls = s.type === "Primary" ? "primary" : s.type === "Derivative*" ? "mixed" : "deriv";
+        var badgeText = s.type;
+        tr.innerHTML =
+          "<td style='font-weight:600;color:#fff'>" + s.outlet + "</td>" +
+          "<td>" + s.country + "</td>" +
+          "<td>" + s.language + "</td>" +
+          "<td style='text-align:center'>" + s.articles + "</td>" +
+          "<td style='color:#9ab'>" + s.focus + "</td>" +
+          "<td><span class='type-badge " + badgeCls + "'>" + badgeText + "</span></td>";
+        tbody.appendChild(tr);
+      });
 
-      // ---- 图3：有向网络 + 交互 ----
-      var graph = D.directedLeadFollow || { nodes: [], links: [] };
-      var nodeById = {};
-      graph.nodes.forEach(function (n) { nodeById[n.id] = n; });
-      // D3 forceLink 会把 source/target 从字符串改成对象；这里先冻结一份原始边，避免后续筛选失效。
-      var allLinksRaw = (graph.links || []).map(function (d) {
-        return {
-          source: (d.source && d.source.id) ? d.source.id : d.source,
-          target: (d.target && d.target.id) ? d.target.id : d.target,
-          weight: d.weight || 0
-        };
-      }).sort(function (a, b) { return b.weight - a.weight; });
-      var maxWeightAll = d3.max(allLinksRaw, function (d) { return d.weight; }) || 1;
-      var topN = 20;
-      var minWeight = 1;
-      var showLabels = true;
-      var slider = document.getElementById("w-a");
-      slider.max = String(maxWeightAll);
-      slider.value = "1";
-      document.getElementById("w-a-v").textContent = "≥1 / max " + maxWeightAll;
-      document.getElementById("lbl-a").classList.add("active");
+      // ══════════════════════════════════════════
+      // FIGURE 2: Interactive Network
+      // ══════════════════════════════════════════
+      var nodes = (D.fig2 && D.fig2.nodes) || [];
+      var links = (D.fig2 && D.fig2.links) || [];
 
-      var btns = document.querySelectorAll(".btn-a[data-top]");
-      btns.forEach(function (b) {
-        b.addEventListener("click", function () {
-          btns.forEach(function (x) { x.classList.remove("active"); });
-          b.classList.add("active");
-          topN = parseInt(b.getAttribute("data-top"), 10) || 20;
-          renderNet();
+      var TYPE_COLOR = { "Primary": "#2563EB", "Derivative*": "#F59E0B", "Derivative": "#DC2626" };
+      var LANG_ORDER = ["English (Deriv.)", "French (MT)", "Spanish (MT)", "Dutch (MT)", "Italian (MT)"];
+
+      var nodeMap = {};
+      nodes.forEach(function (n) { nodeMap[n.id] = n; });
+
+      var outgoingMap = {}, incomingMap = {};
+      links.forEach(function (l) {
+        if (!outgoingMap[l.source]) outgoingMap[l.source] = [];
+        outgoingMap[l.source].push(l);
+        if (!incomingMap[l.target]) incomingMap[l.target] = [];
+        incomingMap[l.target].push(l);
+      });
+
+      var wrap = document.getElementById("fig2-wrap");
+      var W = wrap.clientWidth - 260;  // subtract sidebar width
+      var primaryNodes = nodes.filter(function (n) { return n.type === "Primary"; });
+      var derivNodes = nodes.filter(function (n) { return n.type !== "Primary"; });
+
+      var nodeSpacing = 52, langGap = 46, topMargin = 60, bottomMargin = 30;
+      var langGroups = {};
+      LANG_ORDER.forEach(function (lang) {
+        var members = derivNodes.filter(function (n) { return n.lang === lang; });
+        if (members.length > 0) langGroups[lang] = members;
+      });
+
+      var derivHeight = 0;
+      Object.values(langGroups).forEach(function (members) {
+        derivHeight += (members.length - 1) * nodeSpacing + langGap;
+      });
+      var primaryHeight = (primaryNodes.length - 1) * nodeSpacing;
+      var neededH = topMargin + Math.max(primaryHeight, derivHeight) + bottomMargin;
+      var H = Math.max(neededH, 580);
+
+      var svg = d3.select("#fig2-svg").attr("width", W).attr("height", H);
+      wrap.style.height = H + "px";
+
+      var marginX = Math.min(180, W * 0.2);
+      primaryNodes.forEach(function (n, i) {
+        n.fx = marginX;
+        n.fy = topMargin + i * ((H - topMargin - bottomMargin) / Math.max(primaryNodes.length - 1, 1));
+      });
+
+      var yCursor = topMargin;
+      Object.entries(langGroups).forEach(function (entry) {
+        var lang = entry[0], members = entry[1];
+        var groupHeight = (members.length - 1) * nodeSpacing;
+        var startY = yCursor;
+        members.forEach(function (n, i) {
+          n.fx = W - marginX;
+          n.fy = startY + i * nodeSpacing;
         });
-      });
-      slider.addEventListener("input", function (e) {
-        minWeight = parseInt(e.target.value, 10) || 1;
-        document.getElementById("w-a-v").textContent = "≥" + minWeight + " / max " + maxWeightAll;
-        renderNet();
-      });
-      document.getElementById("lbl-a").addEventListener("click", function (e) {
-        showLabels = !showLabels;
-        e.target.classList.toggle("active", showLabels);
-        renderNet();
+        yCursor = startY + groupHeight + langGap;
       });
 
-      function renderNet() {
-        d3.select("#net-a").selectAll("*").remove();
-        var Wn = document.getElementById("net-a").clientWidth || 800;
-        var Hn = 560;
-        if (minWeight > maxWeightAll) minWeight = maxWeightAll;
-        var candidates = allLinksRaw.filter(function (d) { return d.weight >= minWeight; });
-        var links = (topN >= 9999 ? candidates : candidates.slice(0, topN)).map(function (d) {
-          return { source: d.source, target: d.target, weight: d.weight };
+      // Links
+      var linkElements = svg.append("g").selectAll("path")
+        .data(links).enter().append("path")
+        .attr("fill", "none")
+        .attr("stroke", "#4a5a6a")
+        .style("stroke-width", function (d) { return (1 + d.weightNorm * 4) + "px"; })
+        .style("stroke-opacity", function (d) { return 0.15 + d.weightNorm * 0.45; });
+
+      var radius = 18;
+      // Nodes
+      var nodeGroups = svg.append("g").selectAll("g")
+        .data(nodes).enter().append("g")
+        .attr("transform", function (d) { return "translate(" + d.fx + "," + d.fy + ")"; })
+        .style("cursor", "pointer");
+
+      nodeGroups.append("circle")
+        .attr("r", radius)
+        .attr("fill", function (d) { return TYPE_COLOR[d.type] || "#4a5a6a"; })
+        .attr("stroke", "#1a222d").attr("stroke-width", 2);
+
+      nodeGroups.append("text")
+        .attr("text-anchor", "middle").attr("dy", "0.35em")
+        .attr("fill", "#fff").attr("font-size", "9px").attr("font-weight", "bold")
+        .attr("pointer-events", "none")
+        .text(function (d) { return d.articles; });
+
+      nodeGroups.append("text")
+        .attr("text-anchor", function (d) { return d.type === "Primary" ? "end" : "start"; })
+        .attr("x", function (d) { return d.type === "Primary" ? -radius - 5 : radius + 5; })
+        .attr("dy", "0.35em")
+        .attr("fill", function (d) { return TYPE_COLOR[d.type] || "#9ab"; })
+        .attr("font-size", "10px").attr("font-weight", "600")
+        .attr("pointer-events", "none")
+        .text(function (d) { return d.id; });
+
+      // Language group labels
+      Object.entries(langGroups).forEach(function (entry) {
+        var lang = entry[0], members = entry[1];
+        var midY = (members[0].fy + members[members.length - 1].fy) / 2;
+        svg.append("text")
+          .attr("x", W - marginX + 110)
+          .attr("y", midY)
+          .attr("text-anchor", "start")
+          .attr("font-size", "9px").attr("font-weight", "600")
+          .attr("fill", "#6b7a88")
+          .text(lang);
+      });
+
+      // Column headers
+      svg.append("text").attr("x", marginX).attr("y", 28)
+        .attr("text-anchor", "middle").attr("font-size", "12px")
+        .attr("font-weight", "700").attr("fill", "#2563EB").text("PRIMARY SOURCES");
+      svg.append("text").attr("x", W - marginX).attr("y", 28)
+        .attr("text-anchor", "middle").attr("font-size", "12px")
+        .attr("font-weight", "700").attr("fill", "#DC2626").text("DERIVATIVE SOURCES");
+
+      // Update link paths
+      function updateLinkPaths() {
+        linkElements.attr("d", function (d) {
+          var s = nodeMap[d.source], t = nodeMap[d.target];
+          if (!s || !t) return "";
+          var sx = s.fx, sy = s.fy, tx = t.fx, ty = t.fy;
+          var dx = tx - sx, dy = ty - sy;
+          var dr = Math.sqrt(dx * dx + dy * dy) * 0.4;
+          return "M" + (sx + radius + 2) + "," + sy + " C" + (sx + dr) + "," + sy + " " + (tx - dr) + "," + ty + " " + (tx - radius - 4) + "," + ty;
         });
-        var ids = {};
-        links.forEach(function (l) { ids[l.source] = true; ids[l.target] = true; });
-        var nodes = (graph.nodes || []).filter(function (n) { return ids[n.id]; });
-        if (!nodes.length) {
-          d3.select("#net-a").append("div").attr("class", "caption").text(
-            "当前筛选无边（最小权重≥" + minWeight + "，全图最大权重=" + maxWeightAll + "）。请降低最小权重。"
-          );
-          return;
-        }
-        var mxF = d3.max(nodes, function (d) { return d.firstCount || 1; }) || 1;
-        var rScale = d3.scaleSqrt().domain([0, mxF]).range([7, 17]);
+      }
+      updateLinkPaths();
 
-        var svg = d3.select("#net-a").append("svg").attr("width", Wn).attr("height", Hn);
-        var defs = svg.append("defs");
-        defs.append("marker")
-          .attr("id", "arr-a")
-          .attr("viewBox", "0 -5 10 10")
-          .attr("refX", 10)
-          .attr("refY", 0)
-          .attr("markerWidth", 7)
-          .attr("markerHeight", 7)
-          .attr("markerUnits", "userSpaceOnUse")
-          .attr("orient", "auto")
-          .append("path")
-          .attr("d", "M0,-5L10,0L0,5")
-          .attr("fill", "#cc6a11");
+      // Interaction
+      var selectedNode = null;
+      function linkKey(l) { return l.source + "→" + l.target; }
 
-        var sim = d3.forceSimulation(nodes)
-          .force("link", d3.forceLink(links).id(function (d) { return d.id; }).distance(function (d) { return 70 + 140 / (d.weight + 1); }))
-          .force("charge", d3.forceManyBody().strength(-340))
-          .force("center", d3.forceCenter(Wn / 2, Hn / 2))
-          .force("collide", d3.forceCollide(function (d) { return rScale(d.firstCount || 1) + 8; }));
+      function clearSelection() {
+        nodeGroups.classed("node-dimmed", false).classed("node-highlighted", false);
+        linkElements.classed("link-dimmed", false).classed("highlighted-link", false).classed("highlighted-reverse", false);
+        d3.select("#fig2-hint").style("opacity", 1);
+        d3.select("#fig2-info").html("");
+        d3.select("#fig2-conn").html("");
+        selectedNode = null;
+      }
 
-        var link = svg.append("g").selectAll("line").data(links).enter().append("line")
-          .attr("stroke", "#cc6a11")
-          .attr("stroke-opacity", 0.86)
-          .attr("stroke-width", 1.6)
-          .attr("stroke-linecap", "round")
-          .attr("marker-end", "url(#arr-a)");
+      function selectNode(nodeId) {
+        if (selectedNode === nodeId) { clearSelection(); return; }
+        selectedNode = nodeId;
+        d3.select("#fig2-hint").style("opacity", 0);
 
-        var lab = svg.append("g").selectAll("text").data(showLabels ? links : []).enter().append("text")
-          .attr("font-size", 9).attr("fill", "#e6b37d")
-          .attr("text-anchor", "middle")
-          .attr("paint-order", "stroke")
-          .attr("stroke", "#0a0f14")
-          .attr("stroke-width", 3)
-          .text(function (d) { return d.weight; });
+        var node = nodeMap[nodeId];
+        var clr = TYPE_COLOR[node.type] || "#4a5a6a";
+        var outLinks = outgoingMap[nodeId] || [];
+        var inLinks = incomingMap[nodeId] || [];
+        var allLinks = outLinks.concat(inLinks);
+        var connectedIds = { };
+        connectedIds[nodeId] = true;
+        allLinks.forEach(function (l) { connectedIds[l.source] = true; connectedIds[l.target] = true; });
 
-        var node = svg.append("g").selectAll("g").data(nodes).enter().append("g")
-          .call(d3.drag()
-            .on("start", function (e, d) { if (!e.active) sim.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; })
-            .on("drag", function (e, d) { d.fx = e.x; d.fy = e.y; })
-            .on("end", function (e, d) { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+        var outKeys = {}, inKeys = {};
+        outLinks.forEach(function (l) { outKeys[linkKey(l)] = true; });
+        inLinks.forEach(function (l) { inKeys[linkKey(l)] = true; });
 
-        node.append("circle")
-          .attr("r", function (d) { return rScale(d.firstCount || 1); })
-          .attr("fill", "#2b90d9")
-          .attr("stroke", "#134b75")
-          .attr("stroke-width", 1.2)
-          .append("title")
-          .text(function (d) {
-            return d.id + "\n首发次数: " + (d.firstCount || 0) +
-              "\n首发占比: " + ((d.firstShare || 0) * 100).toFixed(1) + "%" +
-              "\n平均延迟: " + (d.avgLag || 0).toFixed(2) + " 天";
+        nodeGroups.classed("node-dimmed", function (d) { return !connectedIds[d.id]; })
+                  .classed("node-highlighted", function (d) { return !!connectedIds[d.id]; });
+
+        linkElements.classed("link-dimmed", true)
+                    .classed("highlighted-link", false)
+                    .classed("highlighted-reverse", false);
+
+        linkElements.filter(function (d) { return !!outKeys[linkKey(d)]; })
+          .classed("link-dimmed", false).classed("highlighted-link", true);
+
+        linkElements.filter(function (d) { return !!inKeys[linkKey(d)]; })
+          .classed("link-dimmed", false).classed("highlighted-reverse", true);
+
+        // Sidebar info
+        var infoHtml = '<div class="badge" style="background:' + clr + '">' + node.type + '</div>' +
+          '<div class="label">Outlet</div><div class="value">' + node.id + '</div>' +
+          '<div class="label">Total Articles</div><div class="value">' + node.articles + '</div>';
+        if (node.lang) infoHtml += '<div class="label">Language Group</div><div class="value">' + node.lang + '</div>';
+        d3.select("#fig2-info").html(infoHtml);
+
+        var connHtml = "<h4>Connections</h4><ul>";
+        if (outLinks.length > 0) {
+          connHtml += '<li style="font-weight:600;color:#3dd0e0;padding-top:4px">Connected (as source):</li>';
+          outLinks.forEach(function (l) {
+            connHtml += '<li data-node="' + l.target + '" style="color:var(--text)">— ' + l.target + ' <span style="color:var(--dim);font-size:10px">(' + l.weight + ' articles)</span></li>';
           });
+        }
+        if (inLinks.length > 0) {
+          connHtml += '<li style="font-weight:600;color:#e45555;padding-top:4px">Connected (as target):</li>';
+          inLinks.forEach(function (l) {
+            connHtml += '<li data-node="' + l.source + '" style="color:var(--text)">— ' + l.source + ' <span style="color:var(--dim);font-size:10px">(' + l.weight + ' articles)</span></li>';
+          });
+        }
+        if (outLinks.length === 0 && inLinks.length === 0) {
+          connHtml += '<li style="color:var(--dim)">No connections found</li>';
+        }
+        connHtml += "</ul>";
+        d3.select("#fig2-conn").html(connHtml);
 
-        node.append("text")
-          .text(function (d) { return d.id.length > 16 ? d.id.slice(0, 14) + "…" : d.id; })
-          .attr("font-size", 9).attr("fill", "#9ab")
-          .attr("dx", 12).attr("dy", 2);
-
-        node.append("text")
-          .text(function (d) { return d.firstCount || 0; })
-          .attr("font-size", 8).attr("fill", "#fff")
-          .attr("text-anchor", "middle").attr("dy", 3);
-
-        sim.on("tick", function () {
-          link
-            .attr("x1", function (d) {
-              var dx = d.target.x - d.source.x;
-              var dy = d.target.y - d.source.y;
-              var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-              var sr = rScale(d.source.firstCount || 1);
-              return d.source.x + (dx / dist) * (sr + 1);
-            })
-            .attr("y1", function (d) {
-              var dx = d.target.x - d.source.x;
-              var dy = d.target.y - d.source.y;
-              var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-              var sr = rScale(d.source.firstCount || 1);
-              return d.source.y + (dy / dist) * (sr + 1);
-            })
-            .attr("x2", function (d) {
-              var dx = d.target.x - d.source.x;
-              var dy = d.target.y - d.source.y;
-              var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-              var tr = rScale(d.target.firstCount || 1);
-              return d.target.x - (dx / dist) * (tr + 9);
-            })
-            .attr("y2", function (d) {
-              var dx = d.target.x - d.source.x;
-              var dy = d.target.y - d.source.y;
-              var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-              var tr = rScale(d.target.firstCount || 1);
-              return d.target.y - (dy / dist) * (tr + 9);
-            });
-          node.attr("transform", function (d) { return "translate(" + d.x + "," + d.y + ")"; });
-          lab
-            .attr("x", function (d) { return (d.source.x + d.target.x) / 2; })
-            .attr("y", function (d) { return (d.source.y + d.target.y) / 2 - 6; });
+        // Make connection items clickable
+        d3.select("#fig2-conn").selectAll("li[data-node]").on("click", function () {
+          var tid = d3.select(this).attr("data-node");
+          selectNode(tid);
         });
       }
 
-      renderNet();
-    });
+      nodeGroups.on("click", function (e, d) { e.stopPropagation(); selectNode(d.id); });
+      svg.on("click", function () { clearSelection(); });
+
+      // ══════════════════════════════════════════
+      // FIGURE 3: Heatmap Image
+      // ══════════════════════════════════════════
+      var imgEl = document.getElementById("fig3-img");
+      imgEl.src = MC1PORTAL.resolve("data/fig3_similarity_heatmap.png");
+
+    }); // end fetch
   </script>
 </body>
 </html>
