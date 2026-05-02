@@ -3,11 +3,216 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>任务 B · 媒体偏见线索</title>
+  <title>任务 B · 媒体偏见分析</title>
+
   <link rel="stylesheet" href="css/cia-theme.css" />
   <script src="js/paths.js"></script>
   <script src="vendor/d3.v7.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/d3@7.9.0/dist/d3.min.js'"></script>
+
+  <style>
+    .task-note {
+      color: #9ab;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 14px 0 18px 0;
+    }
+
+    .mode-btn,
+    .entity-btn {
+      background: #1a1f25;
+      color: #9ab;
+      border: 1px solid #34404a;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s ease;
+    }
+
+    .mode-btn:hover,
+    .entity-btn:hover {
+      border-color: #7a8c9c;
+      color: #e5edf5;
+    }
+
+    .mode-btn.active,
+    .entity-btn.active {
+      background: #6b1f1f;
+      color: #fff;
+      border-color: #a33;
+    }
+
+    .mode-btn.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .viz-title {
+      margin: 0 0 12px 0;
+      color: #d6dde5;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .viz-subtitle {
+      margin: 0 0 14px 0;
+      color: #8ea0ad;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    #heat-b {
+      overflow-x: auto;
+    }
+
+    #heat-b svg {
+      display: block;
+      margin: 0 auto;
+    }
+
+    .heat-cell {
+      transition: opacity 0.15s ease, stroke 0.15s ease;
+    }
+
+    .heat-cell:hover {
+      stroke: #fff;
+      stroke-width: 1.5px;
+    }
+
+    .cell-value {
+      pointer-events: none;
+    }
+
+    .legend-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0 4px 0;
+      color: #9ab;
+      font-size: 12px;
+    }
+
+    .legend-bar {
+      width: 180px;
+      height: 10px;
+      border-radius: 6px;
+      border: 1px solid #26323d;
+    }
+
+    .legend-attention {
+      background: linear-gradient(to right, #ffffe5, #fee391, #fe9929, #8c2d04);
+    }
+
+    .legend-diverging {
+      background: linear-gradient(to right, #b2182b, #f7f7f7, #2166ac);
+    }
+
+    .empty-state {
+      color: #9ab;
+      padding: 24px;
+      border: 1px dashed #34404a;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      line-height: 1.7;
+    }
+
+    .evidence-box {
+      background: #11161c;
+      border: 1px solid #26323d;
+      border-radius: 8px;
+      padding: 14px;
+      color: #d6dde5;
+      min-height: 120px;
+    }
+
+    .evidence-card {
+      border-left: 3px solid #a33;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 4px;
+    }
+
+    .evidence-meta {
+      color: #9ab;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .evidence-score {
+      color: #d8a100;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .evidence-snippet {
+      margin: 0;
+      line-height: 1.55;
+      font-size: 13px;
+      color: #e1e7ed;
+    }
+
+    .wc-bubble {
+      display: inline-block;
+      margin: 6px 9px 6px 0;
+      line-height: 1.1;
+      font-weight: 600;
+      opacity: 0;
+      animation: wc-in 0.45s ease forwards;
+    }
+
+    @keyframes wc-in {
+      from {
+        transform: translateY(6px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 0.95;
+      }
+    }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .analysis-card {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid #26323d;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .analysis-card h3 {
+      margin: 0 0 8px 0;
+      color: #d6dde5;
+      font-size: 14px;
+    }
+
+    .analysis-card p {
+      margin: 0;
+      color: #9ab;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 900px) {
+      .analysis-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
+
 <body>
   <header class="site-nav">
     <a href="index.html">← 总部</a>
@@ -20,106 +225,705 @@
 
   <div class="container">
     <div class="intel-header">
-      <h1 class="dossier-h1">TASK B / 实体呈现相对比例</h1>
+      <h1 class="dossier-h1">TASK B / 媒体偏见与实体框架分析</h1>
       <p class="mission-block" style="margin:0; border:0; padding:0">
-        热力图：基于 <code>entity_mentions_fixed.json</code> 中各媒体对实体类的提及次数，按媒体<strong>行内归一化</strong>，便于比较「在自家稿件里 POK/GAStech/政府/人物」的相对强调（非绝对发稿量对比）。<br />
-        词云：对 <code>MC1/News Articles</code> 全量 .txt 正文分词（已跳过元数据行），仅作高频主题线索，须结合具体报道阅读。
+        本页用于识别新闻源在人物、地点、组织和事件报道中的潜在偏见。分析分为三层：
+        <strong>Attention Bias</strong>：媒体选择性强调谁；
+        <strong>Framing Bias</strong>：媒体相对于整体平均如何框架化关键实体；
+        <strong>Event Bias</strong>：媒体相对于整体平均如何解释绑架、抗议、环境污染和警方调查等事件。
+        点击热力图单元格可查看对应原文证据，并在实体类格子中联动显示媒体专属词云。
       </p>
     </div>
 
-    <div class="panel two-col" style="display:block">
-      <h2 style="margin-top:0">归一化热力图</h2>
+    <div class="panel">
+      <h2 style="margin-top:0">分析模式</h2>
+      <p class="task-note">
+        竞赛第二问的重点不是单纯统计出现次数，而是比较不同媒体如何选择性报道特定人物、地点和事件。
+        当前页面可用于生成最终提交中的 6 张图：注意力热力图、相对框架热力图、相对事件叙事矩阵、实体上下文词云、关键证据片段和整体判断。
+      </p>
+
+      <div class="analysis-grid">
+        <div class="analysis-card">
+          <h3>1. Attention Bias</h3>
+          <p>看不同媒体把报道篇幅给了谁。适合判断某些媒体是否过度强调 POK、GAStech、政府或具体人物。</p>
+        </div>
+        <div class="analysis-card">
+          <h3>2. Framing Bias</h3>
+          <p>看某媒体相对于整体平均，是否更负面或更少负面地描述 POK、GAStech、Government。</p>
+        </div>
+        <div class="analysis-card">
+          <h3>3. Event Bias</h3>
+          <p>看不同媒体如何叙述同一事件。适合比较绑架、抗议、环境争议和警方调查在不同新闻源中的叙事差异。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 style="margin-top:0">偏见热力图</h2>
+
+      <div class="control-row">
+        <button class="mode-btn active" data-mode="attention">注意力偏见 / Attention</button>
+        <button class="mode-btn" data-mode="framing">框架偏见 / Framing</button>
+        <button class="mode-btn" data-mode="event">事件叙事偏见 / Event</button>
+      </div>
+
+      <div id="legend-b" class="legend-wrap"></div>
       <div class="viz-wrap" id="heat-b" style="min-height:480px; margin-bottom:1rem"></div>
     </div>
 
     <div class="panel">
-      <h2>报道正文高频词 (词云)</h2>
-      <div class="viz-wrap" id="wc-b" style="min-height:300px; padding:1rem; overflow:hidden"></div>
+      <h2 id="wc-title">实体上下文词云（默认显示全局）</h2>
+      <p id="wc-subtitle" class="task-note" style="margin-top:0;">
+        点击 Attention / Framing 热力图中的某个媒体 × 实体格子，可查看该组合的专属词云。
+        红色表示负面框架词，蓝色表示正面框架词，灰蓝色表示中性主题词。
+      </p>
+
+      <div class="control-row" id="entity-controls"></div>
+      <div class="viz-wrap" id="wc-b" style="min-height:320px; padding:1rem; overflow:hidden"></div>
+    </div>
+
+    <div class="panel">
+      <h2>原文证据片段</h2>
+      <div id="evidence-b" class="evidence-box">
+        点击热力图单元格，查看对应媒体、实体或事件的原文证据。
+      </div>
     </div>
   </div>
 
   <script>
-  fetch(MC1PORTAL.resolve("data/task_b.json"))
-    .then(function (r) { return r.json(); })
-    .then(function (D) {
-      var keys = ["POK", "GAStech", "Government", "People"];
-      var rows = D.normalizedHeatmap;
-      var W = document.getElementById("heat-b").clientWidth || 800;
-      var m = { t: 40, r: 30, b: 40, l: 200 };
-      var cellW = (W - m.l - m.r) / keys.length;
-      var cellH = 14;
-      var H = m.t + m.b + cellH * rows.length;
+    fetch(MC1PORTAL.resolve("data/task_b.json"))
+      .then(function (r) {
+        if (!r.ok) throw new Error("Cannot load data/task_b.json");
+        return r.json();
+      })
+      .then(function (D) {
+        var currentMode = "attention";
+        var currentEntity = "POK";
+        var currentOutlet = null;
 
-      var svg = d3.select("#heat-b")
-        .append("svg")
-        .attr("width", W)
-        .attr("height", H)
-        .append("g")
-        .attr("transform", "translate(" + m.l + "," + m.t + ")");
+        var DEFAULT_ATTENTION_KEYS = [
+          "POK",
+          "GAStech",
+          "Government",
+          "People"
+        ];
 
-      var color = d3.scaleSequential(d3.interpolateYlOrBr).domain([0, 0.5]);
+        var DEFAULT_FRAMING_KEYS = [
+          "POK",
+          "GAStech",
+          "Government"
+        ];
 
-      svg.append("g")
-        .attr("class", "axis")
-        .selectAll("g")
-        .data(keys)
-        .enter()
-        .append("text")
-        .attr("x", function (_, i) { return i * cellW + cellW / 2; })
-        .attr("y", -8)
-        .attr("text-anchor", "middle")
-        .attr("fill", "#6b7a88")
-        .text(function (d) { return d; });
+        var DEFAULT_EVENT_KEYS = [
+          "Kidnapping",
+          "Protest",
+          "Environmental Damage",
+          "Police Investigation"
+        ];
 
-      var rowg = svg.selectAll(".r")
-        .data(rows)
-        .enter()
-        .append("g")
-        .attr("transform", function (_, i) { return "translate(0," + (i * cellH) + ")"; });
+        var ENTITY_KEYS_FOR_WORDCLOUD = ["POK", "GAStech", "Government"];
 
-      rowg.append("text")
-        .attr("x", -6)
-        .attr("y", cellH / 2 + 3)
-        .attr("text-anchor", "end")
-        .attr("fill", "#9ab")
-        .attr("font-size", 10)
-        .text(function (d) { return d.outlet.length > 32 ? d.outlet.slice(0, 30) + "…" : d.outlet; });
+        var STOP_FIELDS = {
+          outlet: true,
+          source: true,
+          media: true,
+          articles: true,
+          file: true,
+          date: true
+        };
 
-      rowg.selectAll("rect")
-        .data(function (d) { return keys.map(function (k) { return { o: d, k: k, v: d[k] }; }); })
-        .enter()
-        .append("rect")
-        .attr("x", function (_, i) { return i * cellW + 1; })
-        .attr("width", cellW - 2)
-        .attr("height", cellH - 1)
-        .attr("fill", function (d) { return color(d.v); })
-        .attr("stroke", "#1a1f25")
-        .attr("class", "heat-cell")
-        .style("animation", "none")
-        .append("title")
-        .text(function (d) { return d.o.outlet + " / " + d.k + ": " + (d.v * 100).toFixed(1) + "%"; });
+        function getOutletName(d) {
+          return d.outlet || d.source || d.media || "Unknown";
+        }
 
-      rowg.style("animation", "panel-in 0.4s ease-out backwards");
-      d3.selectAll(".heat-cell")
-        .style("opacity", 0)
-        .transition()
-        .delay(function (_, i) { return i * 3; })
-        .duration(400)
-        .style("opacity", 1);
+        function isNumericValue(v) {
+          return typeof v === "number" && !isNaN(v);
+        }
 
-      // 词云
-      var maxS = d3.max(D.wordcloud, function (d) { return d.size; }) || 1;
-      var scale = d3.scaleSqrt().domain([0, maxS]).range([10, 36]);
-      var host = d3.select("#wc-b");
-      D.wordcloud.forEach(function (w, i) {
-        host.append("span")
-          .attr("class", "wc-bubble")
-          .style("font-size", scale(w.size) + "px")
-          .style("color", d3.interpolateYlOrRd(0.3 + 0.55 * (w.size / maxS)))
-          .style("animation-delay", 0.02 * (i % 20) + "s")
-          .text(w.text);
+        function inferKeys(rows, fallbackKeys) {
+          if (!rows || !rows.length) return fallbackKeys.slice();
+
+          var keySet = {};
+          rows.forEach(function (row) {
+            Object.keys(row).forEach(function (k) {
+              if (STOP_FIELDS[k]) return;
+              if (k.indexOf("_count") > -1) return;
+              if (isNumericValue(+row[k])) keySet[k] = true;
+            });
+          });
+
+          var inferred = Object.keys(keySet);
+          if (!inferred.length) return fallbackKeys.slice();
+
+          var ordered = fallbackKeys.filter(function (k) {
+            return keySet[k];
+          });
+
+          inferred.forEach(function (k) {
+            if (ordered.indexOf(k) === -1) ordered.push(k);
+          });
+
+          return ordered;
+        }
+
+        function normalizeInput(raw) {
+          var attentionRows = raw.attentionHeatmap || raw.normalizedHeatmap || [];
+          var framingRows = raw.framingHeatmap || [];
+          var eventRows = raw.eventMatrix || [];
+
+          var entityContext = raw.entityContext || {};
+          if ((!entityContext || !Object.keys(entityContext).length) && raw.wordcloud) {
+            entityContext = {
+              All: raw.wordcloud.map(function (w) {
+                return {
+                  text: w.text,
+                  size: w.size,
+                  score: 0
+                };
+              })
+            };
+          }
+
+          return {
+            attentionHeatmap: attentionRows,
+            framingHeatmap: framingRows,
+            eventMatrix: eventRows,
+
+            // 全局实体词云：全体媒体 × 实体
+            entityContext: entityContext,
+
+            // 媒体专属词云：某媒体 × 某实体
+            entityContextByOutlet: raw.entityContextByOutlet || {},
+
+            examples: raw.examples || [],
+
+            attentionKeys: raw.attentionKeys || inferKeys(attentionRows, DEFAULT_ATTENTION_KEYS),
+            framingKeys: raw.framingKeys || inferKeys(framingRows, DEFAULT_FRAMING_KEYS),
+            eventKeys: raw.eventKeys || inferKeys(eventRows, DEFAULT_EVENT_KEYS)
+          };
+        }
+
+        var DATA = normalizeInput(D);
+
+        var configs = {
+          attention: {
+            title: "Attention Bias / 媒体对实体的相对关注",
+            subtitle: "每一行按该媒体自身报道中的实体提及总量归一化，因此适合比较“该媒体更强调谁”，不适合直接比较不同媒体的总发稿量。",
+            data: DATA.attentionHeatmap,
+            keys: DATA.attentionKeys,
+            type: "attention",
+            format: function (v) {
+              return (v * 100).toFixed(1) + "%";
+            }
+          },
+          framing: {
+            title: "Framing Bias / 关键实体的相对框架偏见",
+            subtitle: "数值表示相对框架偏离：小于 0 表示该媒体相比整体平均更负面地描述该实体；大于 0 表示相比整体平均更少负面或更偏正面；接近 0 表示接近整体平均或证据不足。",
+            data: DATA.framingHeatmap,
+            keys: DATA.framingKeys,
+            type: "diverging",
+            format: function (v) {
+              return (+v).toFixed(2);
+            }
+          },
+          event: {
+            title: "Event Bias / 关键事件的相对叙事偏见",
+            subtitle: "数值表示相对事件叙事偏离：小于 0 表示该媒体相比整体平均更负面地叙述该事件；大于 0 表示相比整体平均更少负面或更偏正面；接近 0 表示接近整体平均或证据不足。",
+            data: DATA.eventMatrix,
+            keys: DATA.eventKeys,
+            type: "diverging",
+            format: function (v) {
+              return (+v).toFixed(2);
+            }
+          }
+        };
+
+        function getColorScale(cfg, rows) {
+          if (cfg.type === "attention") {
+            var maxVal = 0.5;
+            rows.forEach(function (row) {
+              cfg.keys.forEach(function (k) {
+                maxVal = Math.max(maxVal, +row[k] || 0);
+              });
+            });
+            return d3.scaleSequential(d3.interpolateYlOrBr).domain([0, maxVal]);
+          }
+
+          return d3.scaleDiverging()
+            .domain([-1, 0, 1])
+            .interpolator(d3.interpolateRdBu);
+        }
+
+        function renderLegend(cfg) {
+          var box = d3.select("#legend-b");
+          box.selectAll("*").remove();
+
+          if (cfg.type === "attention") {
+            box.append("span").text("Low");
+            box.append("div").attr("class", "legend-bar legend-attention");
+            box.append("span").text("High attention share");
+          } else {
+            box.append("span").text("Rel. negative");
+            box.append("div").attr("class", "legend-bar legend-diverging");
+            box.append("span").text("Rel. positive");
+          }
+        }
+
+        function splitLabel(label) {
+          var labelMap = {
+            "Environmental Damage": ["Environmental", "Damage"],
+            "Police Investigation": ["Police", "Investigation"],
+            "Kidnapping": ["Kidnapping"],
+            "Protest": ["Protest"],
+            "GAStech": ["GAStech"],
+            "Government": ["Government"],
+            "People": ["People"],
+            "POK": ["POK"]
+          };
+
+          if (labelMap[label]) return labelMap[label];
+
+          var parts = String(label).split(/\s+/);
+          if (parts.length <= 1) return [label];
+
+          var mid = Math.ceil(parts.length / 2);
+          return [
+            parts.slice(0, mid).join(" "),
+            parts.slice(mid).join(" ")
+          ];
+        }
+
+        function renderHeatmap(mode) {
+          currentMode = mode;
+
+          var cfg = configs[mode];
+          var rows = cfg.data || [];
+          var keys = cfg.keys || [];
+
+          d3.select("#heat-b").selectAll("*").remove();
+          renderLegend(cfg);
+
+          var host = d3.select("#heat-b");
+
+          host.append("h3")
+            .attr("class", "viz-title")
+            .text(cfg.title);
+
+          host.append("p")
+            .attr("class", "viz-subtitle")
+            .text(cfg.subtitle);
+
+          if (!rows.length || !keys.length) {
+            host.append("div")
+              .attr("class", "empty-state")
+              .html(
+                "当前 <strong>" + mode + "</strong> 模式没有可用数据。<br>" +
+                "如果你现在使用的是旧版 task_b.json，这是正常的。旧数据通常只有 normalizedHeatmap 和 wordcloud，" +
+                "只能显示注意力偏见，不能显示框架偏见和事件叙事偏见。"
+              );
+            return;
+          }
+
+          var hostEl = document.getElementById("heat-b");
+          var W = hostEl.clientWidth || 900;
+
+          // 顶部空间给横轴标签；左边空间给媒体名
+          var m = { t: 78, r: 40, b: 40, l: 250 };
+
+          // 不同模式使用不同最小列宽，避免事件名被挤压
+          var minCellW = mode === "event" ? 170 : mode === "framing" ? 150 : 120;
+          var cellW = Math.max(minCellW, (W - m.l - m.r) / keys.length);
+
+          var cellH = 18;
+          var innerW = cellW * keys.length;
+
+          // 整张图的真实宽度：左标签区 + 矩阵区 + 右边距
+          var chartW = m.l + innerW + m.r;
+
+          // SVG 宽度至少等于容器宽度，也至少等于图表真实宽度
+          var svgW = Math.max(W, chartW);
+
+          // 关键：让整张图表区域在 SVG 里居中
+          var xOffset = Math.max(0, (svgW - chartW) / 2);
+
+          var H = m.t + m.b + cellH * rows.length;
+
+          var color = getColorScale(cfg, rows);
+
+          var svg = host
+            .append("svg")
+            .attr("width", svgW)
+            .attr("height", H)
+            .append("g")
+            .attr("transform", "translate(" + (xOffset + m.l) + "," + m.t + ")");
+
+          var xLabel = svg.append("g")
+            .selectAll("text")
+            .data(keys)
+            .enter()
+            .append("text")
+            .attr("x", function (_, i) {
+              return i * cellW + cellW / 2;
+            })
+            .attr("y", -34)
+            .attr("text-anchor", "middle")
+            .attr("fill", "#9ab")
+            .attr("font-size", 11)
+            .attr("font-weight", 600);
+
+          xLabel.each(function (d) {
+            var text = d3.select(this);
+            var lines = splitLabel(d);
+
+            lines.forEach(function (line, i) {
+              text.append("tspan")
+                .attr("x", text.attr("x"))
+                .attr("dy", i === 0 ? 0 : 14)
+                .text(line);
+            });
+          });
+
+          xLabel.append("title")
+            .text(function (d) {
+              return d;
+            });
+
+          var rowg = svg.selectAll(".heat-row")
+            .data(rows)
+            .enter()
+            .append("g")
+            .attr("class", "heat-row")
+            .attr("transform", function (_, i) {
+              return "translate(0," + (i * cellH) + ")";
+            });
+
+          rowg.append("text")
+            .attr("x", -8)
+            .attr("y", cellH / 2 + 4)
+            .attr("text-anchor", "end")
+            .attr("fill", "#9ab")
+            .attr("font-size", 10)
+            .text(function (d) {
+              var label = getOutletName(d);
+              return label.length > 34 ? label.slice(0, 32) + "…" : label;
+            })
+            .append("title")
+            .text(function (d) {
+              return getOutletName(d);
+            });
+
+          var cells = rowg.selectAll("rect")
+            .data(function (row) {
+              return keys.map(function (k) {
+                return {
+                  outlet: getOutletName(row),
+                  key: k,
+                  value: +row[k] || 0,
+                  count: +row[k + "_count"] || 0,
+                  articles: +row.articles || 0
+                };
+              });
+            })
+            .enter()
+            .append("rect")
+            .attr("x", function (_, i) {
+              return i * cellW + 1;
+            })
+            .attr("width", cellW - 2)
+            .attr("height", cellH - 1)
+            .attr("fill", function (d) {
+              return color(d.value);
+            })
+            .attr("stroke", "#1a1f25")
+            .attr("class", "heat-cell")
+            .style("opacity", 0)
+            .style("cursor", "pointer")
+            .on("click", function (event, d) {
+              renderEvidence(d.outlet, d.key, currentMode);
+
+              if (ENTITY_KEYS_FOR_WORDCLOUD.indexOf(d.key) >= 0) {
+                currentOutlet = d.outlet;
+                currentEntity = d.key;
+                renderEntityControls();
+                renderWordCloud(d.outlet, d.key);
+              }
+            });
+
+          cells.transition()
+            .delay(function (_, i) {
+              return i * 2;
+            })
+            .duration(350)
+            .style("opacity", 1);
+
+          cells.append("title")
+            .text(function (d) {
+              var txt = d.outlet + " / " + d.key + ": " + cfg.format(d.value);
+              if (cfg.type === "attention") {
+                txt += "\nRaw mentions: " + d.count;
+                txt += "\nArticles: " + d.articles;
+              }
+              return txt;
+            });
+
+          if (cellW >= 70) {
+            rowg.selectAll(".cell-value")
+              .data(function (row) {
+                return keys.map(function (k) {
+                  return {
+                    key: k,
+                    value: +row[k] || 0
+                  };
+                });
+              })
+              .enter()
+              .append("text")
+              .attr("class", "cell-value")
+              .attr("x", function (_, i) {
+                return i * cellW + cellW / 2;
+              })
+              .attr("y", cellH / 2 + 4)
+              .attr("text-anchor", "middle")
+              .attr("font-size", 9)
+              .attr("fill", function (d) {
+                if (cfg.type === "attention") return d.value > 0.35 ? "#fff" : "#1a1f25";
+                return Math.abs(d.value) > 0.55 ? "#fff" : "#1a1f25";
+              })
+              .text(function (d) {
+                if (cfg.type === "attention") return Math.round(d.value * 100);
+                return d.value.toFixed(1);
+              });
+          }
+        }
+
+        function renderEvidence(outlet, key, mode) {
+          var box = d3.select("#evidence-b");
+          box.selectAll("*").remove();
+
+          var examples = (DATA.examples || []).filter(function (e) {
+            var eOutlet = e.outlet || e.source || e.media || "Unknown";
+            if (eOutlet !== outlet) return false;
+
+            if (mode === "event") {
+              return e.event === key || e.entity === key;
+            }
+
+            return e.entity === key || e.event === key;
+          }).slice(0, 5);
+
+          if (!examples.length) {
+            box.append("div")
+              .attr("class", "empty-state")
+              .html(
+                "没有找到 <strong>" + outlet + "</strong> 关于 <strong>" + key + "</strong> 的原文证据片段。<br>" +
+                "当前 task_b.json 中没有匹配该媒体和该实体/事件的原文片段。这可能是因为该组合出现次数较少，或预处理脚本没有为该组合保留 snippet。"
+              );
+            return;
+          }
+
+          examples.forEach(function (e) {
+            var card = box.append("div")
+              .attr("class", "evidence-card");
+
+            card.append("div")
+              .attr("class", "evidence-meta")
+              .text(
+                (e.date || "Unknown date") +
+                " · " +
+                (e.outlet || e.source || e.media || "Unknown outlet") +
+                " · " +
+                (e.file || "")
+              );
+
+            card.append("div")
+              .attr("class", "evidence-score")
+              .text(
+                "Entity/Event: " +
+                (e.entity || e.event || key) +
+                " · Bias score: " +
+                ((+e.score || 0).toFixed(2))
+              );
+
+            card.append("p")
+              .attr("class", "evidence-snippet")
+              .text(e.snippet || "");
+          });
+        }
+
+        function getAvailableEntities() {
+          var keys = Object.keys(DATA.entityContext || {});
+          if (!keys.length) return ["All"];
+
+          var preferred = [
+            "POK",
+            "GAStech",
+            "Government",
+            "All"
+          ];
+
+          var ordered = preferred.filter(function (k) {
+            return keys.indexOf(k) >= 0;
+          });
+
+          keys.forEach(function (k) {
+            if (ordered.indexOf(k) === -1) ordered.push(k);
+          });
+
+          return ordered;
+        }
+
+        function renderEntityControls() {
+          var keys = getAvailableEntities();
+
+          if (keys.indexOf(currentEntity) === -1) {
+            currentEntity = keys[0];
+          }
+
+          var controls = d3.select("#entity-controls");
+          controls.selectAll("*").remove();
+
+          controls.selectAll("button")
+            .data(keys)
+            .enter()
+            .append("button")
+            .attr("class", function (d) {
+              return "entity-btn" + (d === currentEntity ? " active" : "");
+            })
+            .text(function (d) {
+              return d;
+            })
+            .on("click", function (event, d) {
+              currentEntity = d;
+              currentOutlet = null;
+              renderEntityControls();
+              renderWordCloud(null, d);
+            });
+        }
+
+        function renderWordCloud(outlet, entity) {
+          var host = d3.select("#wc-b");
+          host.selectAll("*").remove();
+
+          var words = [];
+          var title = "";
+          var subtitle = "";
+
+          var hasOutletCloud =
+            outlet &&
+            DATA.entityContextByOutlet &&
+            DATA.entityContextByOutlet[outlet] &&
+            DATA.entityContextByOutlet[outlet][entity] &&
+            DATA.entityContextByOutlet[outlet][entity].length > 0;
+
+          if (hasOutletCloud) {
+            words = DATA.entityContextByOutlet[outlet][entity];
+            title = "实体上下文词云：" + outlet + " × " + entity;
+
+            var totalCount = d3.sum(words, function (d) {
+              return +d.size || 0;
+            });
+
+            if (totalCount < 10) {
+              subtitle = "当前显示该媒体在描述该实体时使用的上下文词；样本较少，仅作为线索。总词频：" + totalCount;
+            } else {
+              subtitle = "当前显示该媒体在描述该实体时使用的上下文高频词。总词频：" + totalCount;
+            }
+          } else if (
+            DATA.entityContext &&
+            DATA.entityContext[entity] &&
+            DATA.entityContext[entity].length > 0
+          ) {
+            words = DATA.entityContext[entity];
+
+            if (outlet) {
+              title = "实体上下文词云：" + outlet + " × " + entity + "（无专属词云，回退为全局）";
+              subtitle = "当前 JSON 中没有该媒体-实体组合的专属词云，因此显示全体媒体对该实体的上下文高频词。";
+            } else {
+              title = "实体上下文词云：全体媒体 × " + entity;
+              subtitle = "当前显示全体媒体在描述该实体时使用的上下文高频词。";
+            }
+          } else {
+            d3.select("#wc-title").text("实体上下文词云：暂无数据");
+            d3.select("#wc-subtitle").text("没有可显示的词云数据。");
+
+            host.append("div")
+              .attr("class", "empty-state")
+              .text("暂无该组合的词云数据。");
+
+            return;
+          }
+
+          d3.select("#wc-title").text(title);
+          d3.select("#wc-subtitle").text(subtitle);
+
+          var maxS = d3.max(words, function (d) {
+            return +d.size || 1;
+          }) || 1;
+
+          var scale = d3.scaleSqrt()
+            .domain([0, maxS])
+            .range([12, 36]);
+
+          words.slice(0, 80).forEach(function (w, i) {
+            var score = +w.score || 0;
+            var color = "#9ab";
+
+            if (score > 0) {
+              color = d3.interpolateBlues(0.65);
+            } else if (score < 0) {
+              color = d3.interpolateReds(0.65);
+            }
+
+            host.append("span")
+              .attr("class", "wc-bubble")
+              .style("font-size", scale(+w.size || 1) + "px")
+              .style("color", color)
+              .style("margin", "0 10px 10px 0")
+              .style("display", "inline-block")
+              .style("animation-delay", 0.02 * (i % 20) + "s")
+              .text(w.text || w.word || "");
+          });
+        }
+
+        function initializeButtons() {
+          d3.selectAll(".mode-btn")
+            .classed("disabled", function () {
+              var mode = this.dataset.mode;
+              return !(configs[mode].data && configs[mode].data.length);
+            })
+            .on("click", function () {
+              var mode = this.dataset.mode;
+
+              d3.selectAll(".mode-btn").classed("active", false);
+              d3.select(this).classed("active", true);
+
+              renderHeatmap(mode);
+            });
+        }
+
+        initializeButtons();
+        renderEntityControls();
+        renderHeatmap("attention");
+        renderWordCloud(null, "POK");
+
+        window.addEventListener("resize", function () {
+          renderHeatmap(currentMode);
+
+          if (ENTITY_KEYS_FOR_WORDCLOUD.indexOf(currentEntity) >= 0) {
+            renderWordCloud(currentOutlet, currentEntity);
+          }
+        });
+      })
+      .catch(function (err) {
+        d3.select("#heat-b")
+          .append("div")
+          .attr("class", "empty-state")
+          .html(
+            "数据加载失败：<strong>data/task_b.json</strong><br>" +
+            "请检查文件路径是否正确，或者浏览器控制台是否有跨域/本地文件访问限制。<br><br>" +
+            err.message
+          );
       });
-    });
   </script>
 </body>
 </html>
