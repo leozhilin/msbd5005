@@ -274,18 +274,44 @@ for (a, b), w in lead_follow.items():
     links_a.append({"source": a, "target": b, "weight": w})
 links_a.sort(key=lambda x: -x["weight"])
 
-with open(os.path.join(OUT, "task_a.json"), "w", encoding="utf-8") as f:
+TASK_A_METHOD_NOTE = (
+    "Task A parses MC1/News Articles .txt files for SOURCE/TITLE/PUBLISHED, groups articles by "
+    "normalized title, then within each group uses earliest publish dates for first-share share, "
+    "mean follow lag, and directed A→B edges when A predates B. This yields propagation hints, "
+    "not proof of explicit republication."
+)
+
+task_a_payload = {
+    "firstPublishShare": first_share,
+    "avgLagDays": avg_lag,
+    "directedLeadFollow": {"nodes": nodes_a, "links": links_a},
+    "stats": {
+        "rawArticlesUsable": len(raw_records),
+        "coTopicGroups": co_topics,
+    },
+    "methodNote": TASK_A_METHOD_NOTE,
+}
+
+path_a = os.path.join(OUT, "task_a.json")
+if os.path.isfile(path_a):
+    try:
+        with open(path_a, encoding="utf-8") as f:
+            prev = json.load(f)
+        for k in ("fig1", "fig2"):
+            if k in prev:
+                task_a_payload[k] = prev[k]
+        pst = prev.get("stats") or {}
+        st = dict(task_a_payload["stats"])
+        for k in ("totalArticles", "datedArticles", "networkNodes", "networkLinks"):
+            if k in pst:
+                st[k] = pst[k]
+        task_a_payload["stats"] = st
+    except (OSError, ValueError, TypeError):
+        pass
+
+with open(path_a, "w", encoding="utf-8") as f:
     json.dump(
-        {
-            "firstPublishShare": first_share,
-            "avgLagDays": avg_lag,
-            "directedLeadFollow": {"nodes": nodes_a, "links": links_a},
-            "stats": {
-                "rawArticlesUsable": len(raw_records),
-                "coTopicGroups": co_topics,
-            },
-            "methodNote": "Task A parses MC1/News Articles .txt files for SOURCE/TITLE/PUBLISHED, groups articles by normalized title, then within each group uses earliest publish dates for first-share share, mean follow lag, and directed A→B edges when A predates B. This yields propagation hints, not proof of explicit republication.",
-        },
+        task_a_payload,
         f,
         ensure_ascii=False,
         separators=(",", ":"),
