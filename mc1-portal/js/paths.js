@@ -1,5 +1,5 @@
 /**
- * GitHub Pages 子路径（如 /msbd5005/mc1-portal/）下解析 data、../MC1 等相对资源。
+ * Resolve data and ../MC1 paths when the portal is hosted under a subpath (e.g. GitHub Pages /repo/mc1-portal/).
  */
 (function (global) {
   var MARK = "/mc1-portal";

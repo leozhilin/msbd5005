@@ -84,17 +84,17 @@
     setActiveTab("person");
     showPersonListActive();
     var main = byId("main-content");
-    main.innerHTML = '<p class="btn-loader arch-placeholder">正在读取档案…</p>';
+    main.innerHTML = '<p class="btn-loader arch-placeholder">Loading record…</p>';
 
     var pHead =
       '<div class="paper">' +
       '  <p class="paper-h">Personnel record</p>' +
       '  <h1 class="paper-title"></h1>' +
-      '  <p class="paper-meta">分类：' + (item.file.indexOf("Bio-") === 0 ? "高管传略 (Bio)" : "员工简历 (Resume)") + " · 原件 " + item.file + "</p>" +
-      '  <p class="paper-actions"><a class="open-dl" href="" download>↓ 下载 .docx 原件</a></p>' +
+      '  <p class="paper-meta">Type: ' + (item.file.indexOf("Bio-") === 0 ? "Executive bio" : "Staff résumé") + " · Source file " + item.file + "</p>" +
+      '  <p class="paper-actions"><a class="open-dl" href="" download>↓ Download .docx</a></p>' +
       '  <div class="doc-html" id="doc-body"></div>' +
       "</div>" +
-      '<div class="paper" id="mail-paper"><p class="paper-h">Email traffic (兩週內內郵去重索引)</p><div id="mail-block"><p class="doc-empty">正在载入內郵头索引（约 0.5MB，仅首次）…</p></div></div>';
+      '<div class="paper" id="mail-paper"><p class="paper-h">Email traffic (deduplicated header index)</p><div id="mail-block"><p class="doc-empty">Loading email header index…</p></div></div>';
 
     main.innerHTML = pHead;
     main.querySelector("h1.paper-title").textContent = name;
@@ -114,11 +114,11 @@
         return mammothMod.convertToHtml({ arrayBuffer: buf });
       })
       .then(function (o) {
-        byId("doc-body").innerHTML = o.value || "<p class=doc-empty>（正文为空或无法转换）</p>";
+        byId("doc-body").innerHTML = o.value || "<p class=doc-empty>(No body text or conversion failed.)</p>";
       })
       .catch(function () {
         byId("doc-body").innerHTML =
-          "<p class=doc-empty>无法在线转换该 Word 档。请使用「下载 .docx 原件」在本地打开。</p>";
+          "<p class=doc-empty>Could not convert this Word file in the browser. Use Download .docx to open it locally.</p>";
       });
 
     loadEmailIndex().then(function () {
@@ -126,12 +126,12 @@
       var rows = E.rows || [];
       var block = byId("mail-block");
       if (idxs.length === 0) {
-        block.innerHTML = "<p class=doc-empty>未匹配到该姓名对应的邮件表记录。</p>";
+        block.innerHTML = "<p class=doc-empty>No email header rows matched this name.</p>";
         return;
       }
       var t =
-        "<p class=paper-meta>共 " + idxs.length + " 条去重后头记录（同一条目若出现在多人群发中，会在多名人员下列出）。</p>" +
-        '<div class=mail-table-wrap><table class=mail-table><thead><tr><th>From</th><th class=mail-td-to>To / Cc 摘要</th><th>日期</th><th class=col-subj>主题</th></tr></thead><tbody>';
+        "<p class=paper-meta>" + idxs.length + " deduplicated header row(s). The same row may appear under multiple names when they share a thread.</p>" +
+        '<div class=mail-table-wrap><table class=mail-table><thead><tr><th>From</th><th class=mail-td-to>To / Cc (summary)</th><th>Date</th><th class=col-subj>Subject</th></tr></thead><tbody>';
       idxs.forEach(function (i) {
         var e = rows[i];
         if (!e) return;
@@ -172,11 +172,11 @@
     selArticle = file;
     setActiveTab("news");
     if (!outlet || !file) {
-      renderMainPlaceholder("在左侧先选择分馆，再点选文章标题。");
+      renderMainPlaceholder("Choose an outlet on the left, then pick an article title.");
       return Promise.resolve();
     }
     var main = byId("main-content");
-    main.innerHTML = '<p class="btn-loader arch-placeholder">载入报道全文…</p>';
+    main.innerHTML = '<p class="btn-loader arch-placeholder">Loading article…</p>';
     return ensureArticleList(outlet)
       .then(function (pack) {
         var art = (pack.articles || []).find(function (a) { return a.file === file; });
@@ -194,7 +194,7 @@
           "<div class=paper><p class=paper-h>Press archive</p>" +
           "<h1 class=paper-title>" +
           esc(file) +
-          "</h1><p class=news-meta>来源：" +
+          "</h1><p class=news-meta>Outlet: " +
           esc(outlet) +
           "</p>" +
           '<div class=news-body></div></div>';
@@ -204,9 +204,9 @@
       })
       .catch(function (err) {
         main.innerHTML =
-          '<p class="arch-placeholder">无法加载该文（' +
+          '<p class="arch-placeholder">Could not load this article (' +
           esc(String(err && err.message ? err.message : err)) +
-          "）。请确认以仓库根运行 http.server 且 <code>MC1/News Articles</code> 存在。</p>";
+          "). Check that <code>MC1/News Articles</code> is available to the server.</p>";
       });
   }
 
@@ -263,7 +263,7 @@
     return ensureArticleList(outlet)
       .then(function () {
         setNewsSel();
-        renderMainPlaceholder("在左侧分馆下点选一篇以加载正文。");
+        renderMainPlaceholder("Select an article under the outlet on the left.");
         setHash();
       });
   }
@@ -332,18 +332,18 @@
         });
         applyHash();
         if (!location.hash) {
-          renderMainPlaceholder("左侧选择人员查看简历与往来邮件，或选择新闻分馆后点文章。");
+          renderMainPlaceholder("Select a person for résumé and email headers, or an outlet and article for full text.");
         }
       })
       .catch(function () {
         byId("main-content").innerHTML =
-          '<p class="arch-placeholder" style="color:#e99">无法加载 <code>data/manifest.json</code>。请在本地/服务器用 <strong>HTTP</strong> 打开本站点（不要 file://），并确认已执行 <code>python3 mc1-portal/generate_data.py</code> 且已把 <code>mc1-portal/data</code> 推送到 GitHub。若在 GitHub Pages，请在仓库根目录放 <code>.nojekyll</code> 后重新推送，并检查访问地址为 <code>…/mc1-portal/index.html</code>。</p>';
+          '<p class="arch-placeholder" style="color:#e99">Could not load <code>data/manifest.json</code>. Serve this folder over HTTP and ensure the data bundle is present.</p>';
       });
 
     byId("tab-person").addEventListener("click", function () {
       setActiveTab("person");
       if (selName) openPerson(selName);
-      else renderMainPlaceholder("左侧选择人员。");
+      else renderMainPlaceholder("Select a person on the left.");
     });
     byId("tab-news").addEventListener("click", function () {
       setActiveTab("news");
@@ -351,7 +351,7 @@
       else {
         byId("ul-art").innerHTML = "";
         byId("arch-art-h").style.display = "none";
-        renderMainPlaceholder("先选择媒体分馆。");
+        renderMainPlaceholder("Choose an outlet first.");
       }
     });
     window.addEventListener("hashchange", applyHash);

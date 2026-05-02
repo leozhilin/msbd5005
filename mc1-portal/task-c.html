@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>任务 C · 双视图关系仪表盘</title>
+  <title>Task C · Dual-view relationship dashboard</title>
   <link rel="stylesheet" href="css/cia-theme.css" />
   <script src="js/paths.js"></script>
   <script src="vendor/d3.v7.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/d3@7.9.0/dist/d3.min.js'"></script>
@@ -100,8 +100,8 @@
 </head>
 <body>
   <header class="site-nav">
-    <a href="index.html">← 总部</a>
-    <a href="archive.html">档案室</a>
+    <a href="index.html">← HQ</a>
+    <a href="archive.html">Archive</a>
     <span class="sep">|</span>
     <a href="task-a.html">A</a>
     <a href="task-b.html">B</a>
@@ -110,10 +110,10 @@
 
   <div class="container">
     <div class="intel-header">
-      <h1 class="dossier-h1">TASK C / 关系网络与通信结构</h1>
+      <h1 class="dossier-h1">TASK C / Relationship network &amp; communication structure</h1>
       <p class="mission-block" style="margin:0; border:0; padding:0">
-        采用与参考页一致的双视图结构：<strong>Relationships</strong> + <strong>Goals Matrix</strong>。<br />
-        数据来源为 <code>MC1</code> 原始新闻与关系数据；Goals Matrix 议题由数据自动抽取 Top4，并支持证据回溯。
+        Same dual-view layout as the reference: <strong>Relationships</strong> + <strong>Goals Matrix</strong>.<br />
+        Data is derived from <code>MC1</code> news and relationship extracts; the Goals Matrix uses the top four topics from the data, with evidence drill-down.
       </p>
       <div id="stats" class="stats-row"></div>
     </div>
@@ -121,7 +121,7 @@
     <div class="panel layout-c">
       <aside class="ctl">
         <div class="group">
-          <h3>视图切换</h3>
+          <h3>View</h3>
           <div class="tabs-c">
             <button id="tab-rel" class="btn-c active">Relationships</button>
             <button id="tab-goal" class="btn-c">Goals Matrix</button>
@@ -129,23 +129,23 @@
         </div>
         <div id="ctl-rel">
           <div class="group">
-            <h3>关系筛选</h3>
-            <label for="search">关键词（节点/关系）</label>
-            <input id="search" type="search" placeholder="如 GAStech / conflict" />
+            <h3>Relationship filters</h3>
+            <label for="search">Keyword (node / edge)</label>
+            <input id="search" type="search" placeholder="e.g. GAStech / conflict" />
           </div>
           <div class="group">
-            <label for="focus">焦点节点</label>
-            <select id="focus"><option value="">全部节点</option></select>
+            <label for="focus">Focus node</label>
+            <select id="focus"><option value="">All nodes</option></select>
           </div>
           <div class="group">
-            <label>关系类型</label>
+            <label>Edge types</label>
             <label class="check"><input id="t-off" type="checkbox" checked /> official</label>
             <label class="check"><input id="t-unoff" type="checkbox" checked /> unofficial</label>
             <label class="check"><input id="t-conf" type="checkbox" checked /> conflict</label>
             <label class="check"><input id="t-loc" type="checkbox" checked /> weak / inferred</label>
           </div>
           <div class="group">
-            <h3>预设</h3>
+            <h3>Presets</h3>
             <div class="tabs-c" style="flex-wrap:wrap;">
               <button id="preset-all" class="btn-c active">Overview</button>
               <button id="preset-official" class="btn-c">Official only</button>
@@ -155,7 +155,7 @@
         </div>
         <div id="ctl-goal" class="hidden">
           <div class="group">
-            <h3>矩阵筛选</h3>
+            <h3>Matrix filters</h3>
             <label class="check"><input id="g-official" type="checkbox" checked /> Show official goals</label>
             <label class="check"><input id="g-inferred" type="checkbox" checked /> Show inferred / weak cells</label>
           </div>
@@ -164,7 +164,7 @@
 
       <main>
         <div id="view-rel">
-          <div class="legend-c">边颜色：official / unofficial / conflict / weak(inferred)；线宽随权重变化。</div>
+          <div class="legend-c">Edge color: official / unofficial / conflict / weak (inferred). Line width reflects weight.</div>
           <div class="line-legend">
             <span class="l-off">official</span>
             <span class="l-unoff">unofficial</span>
@@ -172,18 +172,18 @@
             <span class="l-weak">weak / inferred</span>
           </div>
           <div class="viz-tools">
-            <button id="resetView" class="btn-c" type="button">重置视图</button>
+            <button id="resetView" class="btn-c" type="button">Reset view</button>
           </div>
           <div id="viz-rel" class="viz-wrap" style="min-height:720px"></div>
         </div>
         <div id="view-goal" class="hidden">
-          <div class="legend-c">Goals Matrix（组织 × 议题：Economic / Environmental / Security / Militancy）</div>
+          <div class="legend-c">Goals Matrix (organization × topic: Economic / Environmental / Security / Militancy)</div>
           <div id="viz-matrix" class="matrix"></div>
         </div>
       </main>
 
       <aside class="detail">
-        <h3>细节面板</h3>
+        <h3>Detail panel</h3>
         <div id="detail-main" class="k-list"></div>
       </aside>
     </div>
@@ -263,7 +263,7 @@
         return edges.some(function (e) { return e.source === n.id || e.target === n.id; }) || !state.focus;
       });
       if (!edges.length) {
-        setDetail(["当前筛选无结果。"]);
+        setDetail(["No results for the current filters."]);
         wrap.innerHTML = '<div class="caption">No visible relationships under current filters.</div>';
         return;
       }
@@ -279,7 +279,7 @@
         .append("feDropShadow")
         .attr("dx", "0").attr("dy", "0").attr("stdDeviation", "2.2")
         .attr("flood-color", "#5ea7c7").attr("flood-opacity", "0.35");
-      // 不在 SVG 里画背景板，直接复用容器背景，避免出现“SVG区域一色/容器区域一色”的分界线。
+      // No SVG backdrop plate; reuse container background to avoid a visible seam.
 
       var plotLayer = svg.append("g");
       var edgeLayer = plotLayer.append("g");
@@ -364,7 +364,7 @@
             .text(n.label);
         });
 
-      // 依据当前可见节点范围自动缩放和平移，避免图挤在角落
+      // Fit visible nodes: auto scale/translate so the graph is not stuck in a corner.
       var minX = d3.min(useNodes, function (n) { return n.x; });
       var maxX = d3.max(useNodes, function (n) { return n.x; });
       var minY = d3.min(useNodes, function (n) { return n.y; });
@@ -380,7 +380,7 @@
       var baseTransform = d3.zoomIdentity.translate(tx, ty).scale(scale);
       plotLayer.attr("transform", baseTransform.toString());
 
-      // 动态交互：滚轮缩放 + 拖拽平移
+      // Zoom (wheel) + pan (drag)
       var zoom = d3.zoom()
         .scaleExtent([0.5, 6])
         .on("zoom", function (event) {
@@ -477,7 +477,7 @@
       bindEvents();
       renderCurrentView();
     }).catch(function (err) {
-      setDetail(["Task C 数据加载失败", String(err)]);
+      setDetail(["Failed to load Task C data.", String(err)]);
     });
   </script>
 </body>

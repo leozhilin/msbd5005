@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MC-1 情报台 · 行动概览</title>
+  <title>MC-1 Intel · Mission overview</title>
   <link rel="stylesheet" href="css/cia-theme.css" />
 </head>
 <body>
   <header class="site-nav">
-    <a href="index.html" class="active">总部</a>
+    <a href="index.html" class="active">HQ</a>
     <span class="sep">|</span>
-    <a href="archive.html">统合档案室</a>
+    <a href="archive.html">Archive</a>
     <a href="task-a.html">A</a>
     <a href="task-b.html">B</a>
     <a href="task-c.html">C</a>
@@ -19,63 +19,54 @@
   <div class="container">
     <div class="intel-header">
       <span class="badge-classified">SECRET // NOFORN</span>
-      <h1 class="dossier-h1" style="margin-top:0.8rem">OPERATION TETHYS · 可视化分析台</h1>
+      <h1 class="dossier-h1" style="margin-top:0.8rem">OPERATION TETHYS · Visual analysis console</h1>
       <h1 class="title-lg">VAST 2021 Mini-Challenge 1</h1>
       <p class="meta-row">
-        <span>案卷编号: VAST-2021-MC1</span>
-        <span>基准日: 2014-01-21</span>
-        <span>系统: 静态数据终端</span>
+        <span>Case ID: VAST-2021-MC1</span>
+        <span>As-of date: 2014-01-21</span>
+        <span>System: static data terminal</span>
       </p>
     </div>
 
     <div class="panel">
-      <h2>任务背景 (OPERATIONAL CONTEXT)</h2>
+      <h2>Operational context</h2>
       <div class="mission-block">
-        <p>虚构国家 Kronos，天然气公司 <strong>GAStech</strong> 在 IPO 前后发生多名员工失踪；民间组织 <strong>保护克洛诺斯 (POK)</strong> 被列为嫌疑对象。本系统汇总官方提供的<strong>历史新闻、员工简历、两周内部邮件头</strong>，供分析「人—组织」关系前先行查阅原始材料。</p>
-        <p style="margin:0.6rem 0 0 0; color:var(--dim)">注：本场景及人物、地点均为虚构。请在本地以 HTTP 方式打开本站点（见页脚），以便拉取 <code>data</code> 分片与 Word/文本原件。</p>
+        <p>In the fictional nation of Kronos, natural-gas firm <strong>GAStech</strong> sees multiple employees go missing around its IPO; the civic group <strong>Protectors of Kronos (POK)</strong> is treated as a person of interest. This console aggregates the released <strong>historical news, staff résumés, and two weeks of internal email headers</strong> so you can review primary material before deeper person–organization analysis.</p>
+        <p style="margin:0.6rem 0 0 0; color:var(--dim)">Note: the scenario, people, and places are fictional.</p>
       </div>
     </div>
 
     <div class="err-box" id="proto-err" style="display:none"></div>
 
     <div class="panel">
-      <h2>统合档案室 (RAW MATERIALS)</h2>
+      <h2>Integrated archive (raw materials)</h2>
       <p style="margin:0 0 1rem; color:#aebcc8">
-        在<strong>单页</strong>中浏览人事与新闻：点选人名可<strong>内嵌预览</strong>其简历/传略（Word 转 HTML），同页下方列出
-        <code>email headers.csv</code> 中匹配到的往来邮件头；在「新闻分馆」中选媒体、再点文章即加载
-        <code>.txt</code> 全文。统计（简历 <span id="n-res">—</span> 份 · 新闻 <span id="n-nw">—</span> 篇）见下方入口。
+        Browse personnel and press in one view: select a name for an <strong>inline preview</strong> of the résumé or bio (Word converted to HTML), with matched traffic from <code>email headers.csv</code> below; under <em>News outlets</em>, pick a source and an article to load the full <code>.txt</code>. Counts (résumés <span id="n-res">—</span> · articles <span id="n-nw">—</span>) are shown on the entry card.
       </p>
       <a class="big-btn t-a" href="archive.html" style="max-width: 100%; text-align: center; border-left-color: var(--warn)">
-        进入统合档案室
-        <small>人事 / 新闻 / 內郵 同一视窗，支持地址栏 # 分享</small>
+        Open integrated archive
+        <small>Personnel, news, and headers in one pane; URL hash is shareable</small>
       </a>
     </div>
 
     <div class="panel">
-      <h2>子任务分析入口</h2>
-      <p class="task-intro">三页均基于已抽取的 <code>*.json</code> 与全文统计，图表与源数据保持可追溯对应。</p>
+      <h2>Task dashboards</h2>
+      <p class="task-intro">Each view is built from extracted <code>*.json</code> and full-corpus statistics; charts stay traceable to the underlying data.</p>
       <div class="deck-3">
         <a class="big-btn t-a" href="task-a.html">
-          任务 A
-          <small>媒体目录 · 同题共现网 · 报道量</small>
+          Task A
+          <small>Outlet catalog · co-topic network · coverage</small>
         </a>
         <a class="big-btn t-b" href="task-b.html">
-          任务 B
-          <small>实体归一化热力图 · 报道词云</small>
+          Task B
+          <small>Entity heatmaps · outlet word cloud</small>
         </a>
         <a class="big-btn t-c" href="task-c.html">
-          任务 C
-          <small>多源关系边 · 邮件通信子网</small>
+          Task C
+          <small>Multi-source ties · email subgraph</small>
         </a>
       </div>
     </div>
-
-    <p class="caption" style="border:none; padding:0">
-      在仓库根目录执行 <code>python3 mc1-portal/generate_data.py</code> 后，再
-      <code>python3 -m http.server 8000</code>，访问
-      <a href="http://127.0.0.1:8000/mc1-portal/index.html">/mc1-portal/index.html</a>。首次打开档案室会下载约
-      0.5MB 的內郵头索引，属一次性。
-    </p>
   </div>
 
   <script src="js/paths.js"></script>
@@ -84,7 +75,7 @@
     if (location.protocol === "file:") {
       var e = document.getElementById("proto-err");
       e.style.display = "block";
-      e.textContent = "请使用 HTTP 服务打开本页，否则部分链接无法工作。";
+      e.textContent = "Open this site over HTTP for full functionality (file:// limits fetches).";
     }
     fetch(
       (window.MC1PORTAL && window.MC1PORTAL.resolve

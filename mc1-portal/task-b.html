@@ -215,7 +215,7 @@
 
 <body>
   <header class="site-nav">
-    <a href="index.html">← Home</a>
+    <a href="index.html">← HQ</a>
     <a href="archive.html">Archive</a>
     <span class="sep">|</span>
     <a href="task-a.html">A</a>
@@ -518,8 +518,7 @@
               .attr("class", "empty-state")
               .html(
                 "No data is available for the <strong>" + mode + "</strong> mode.<br>" +
-                "If you are using an older task_b.json file, this is expected. Older data usually only contains normalizedHeatmap and wordcloud, " +
-                "which can only support the Attention Bias view."
+                "Only the Attention Bias view is available when framing and event matrices are absent from the dataset."
               );
             return;
           }
@@ -919,9 +918,7 @@
           .append("div")
           .attr("class", "empty-state")
           .html(
-            "Failed to load data: <strong>data/task_b.json</strong><br>" +
-            "Please check whether the file path is correct, or whether the browser console reports a CORS/local file access issue.<br><br>" +
-            err.message
+            "Could not load <strong>data/task_b.json</strong>.<br><br>" + (err && err.message ? String(err.message) : String(err))
           );
       });
   </script>
