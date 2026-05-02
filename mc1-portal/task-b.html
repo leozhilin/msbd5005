@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>任务 B · 媒体偏见分析</title>
+  <title>Task B · Media Bias Analysis</title>
 
   <link rel="stylesheet" href="css/cia-theme.css" />
   <script src="js/paths.js"></script>
@@ -215,8 +215,8 @@
 
 <body>
   <header class="site-nav">
-    <a href="index.html">← 总部</a>
-    <a href="archive.html">档案室</a>
+    <a href="index.html">← Home</a>
+    <a href="archive.html">Archive</a>
     <span class="sep">|</span>
     <a href="task-a.html">A</a>
     <a href="task-b.html" class="active">B</a>
@@ -225,46 +225,46 @@
 
   <div class="container">
     <div class="intel-header">
-      <h1 class="dossier-h1">TASK B / 媒体偏见与实体框架分析</h1>
+      <h1 class="dossier-h1">TASK B / Media Bias and Entity Framing Analysis</h1>
       <p class="mission-block" style="margin:0; border:0; padding:0">
-        本页用于识别新闻源在人物、地点、组织和事件报道中的潜在偏见。分析分为三层：
-        <strong>Attention Bias</strong>：媒体选择性强调谁；
-        <strong>Framing Bias</strong>：媒体相对于整体平均如何框架化关键实体；
-        <strong>Event Bias</strong>：媒体相对于整体平均如何解释绑架、抗议、环境污染和警方调查等事件。
-        点击热力图单元格可查看对应原文证据，并在实体类格子中联动显示媒体专属词云。
+        This page is designed to identify potential bias in how news sources represent people, places, organizations, and events. The analysis has three layers:
+        <strong>Attention Bias</strong>: which actors each outlet selectively emphasizes;
+        <strong>Framing Bias</strong>: how each outlet frames key entities relative to the overall average;
+        <strong>Event Bias</strong>: how each outlet explains events such as kidnapping, protests, environmental damage, and police investigations relative to the overall average.
+        Click a heatmap cell to view the corresponding original evidence snippets. For entity cells, the linked word cloud will also update to show outlet-specific contextual words.
       </p>
     </div>
 
     <div class="panel">
-      <h2 style="margin-top:0">分析模式</h2>
+      <h2 style="margin-top:0">Analysis Modes</h2>
       <p class="task-note">
-        竞赛第二问的重点不是单纯统计出现次数，而是比较不同媒体如何选择性报道特定人物、地点和事件。
-        当前页面可用于生成最终提交中的 6 张图：注意力热力图、相对框架热力图、相对事件叙事矩阵、实体上下文词云、关键证据片段和整体判断。
+        The key purpose of Task B is not simply to count word frequency, but to compare how different media outlets selectively report specific people, places, and events.
+        This page supports six visual components for the final analysis: the attention heatmap, the relative framing heatmap, the relative event narrative matrix, the entity context word cloud, the evidence snippets, and the overall interpretation.
       </p>
 
       <div class="analysis-grid">
         <div class="analysis-card">
           <h3>1. Attention Bias</h3>
-          <p>看不同媒体把报道篇幅给了谁。适合判断某些媒体是否过度强调 POK、GAStech、政府或具体人物。</p>
+          <p>Shows which actors receive more coverage from different outlets. It helps identify whether some outlets overemphasize POK, GAStech, Government, or specific people.</p>
         </div>
         <div class="analysis-card">
           <h3>2. Framing Bias</h3>
-          <p>看某媒体相对于整体平均，是否更负面或更少负面地描述 POK、GAStech、Government。</p>
+          <p>Shows whether an outlet describes POK, GAStech, or Government more negatively or less negatively than the overall average.</p>
         </div>
         <div class="analysis-card">
           <h3>3. Event Bias</h3>
-          <p>看不同媒体如何叙述同一事件。适合比较绑架、抗议、环境争议和警方调查在不同新闻源中的叙事差异。</p>
+          <p>Shows how different outlets narrate the same events. It helps compare narrative differences in kidnapping, protests, environmental disputes, and police investigations.</p>
         </div>
       </div>
     </div>
 
     <div class="panel">
-      <h2 style="margin-top:0">偏见热力图</h2>
+      <h2 style="margin-top:0">Bias Heatmaps</h2>
 
       <div class="control-row">
-        <button class="mode-btn active" data-mode="attention">注意力偏见 / Attention</button>
-        <button class="mode-btn" data-mode="framing">框架偏见 / Framing</button>
-        <button class="mode-btn" data-mode="event">事件叙事偏见 / Event</button>
+        <button class="mode-btn active" data-mode="attention">Attention Bias</button>
+        <button class="mode-btn" data-mode="framing">Framing Bias</button>
+        <button class="mode-btn" data-mode="event">Event Narrative Bias</button>
       </div>
 
       <div id="legend-b" class="legend-wrap"></div>
@@ -272,10 +272,10 @@
     </div>
 
     <div class="panel">
-      <h2 id="wc-title">实体上下文词云（默认显示全局）</h2>
+      <h2 id="wc-title">Entity Context Word Cloud (Global View by Default)</h2>
       <p id="wc-subtitle" class="task-note" style="margin-top:0;">
-        点击 Attention / Framing 热力图中的某个媒体 × 实体格子，可查看该组合的专属词云。
-        红色表示负面框架词，蓝色表示正面框架词，灰蓝色表示中性主题词。
+        Click an outlet × entity cell in the Attention or Framing heatmap to view the outlet-specific word cloud.
+        Red indicates negative framing words, blue indicates positive framing words, and gray-blue indicates neutral topic words.
       </p>
 
       <div class="control-row" id="entity-controls"></div>
@@ -283,9 +283,9 @@
     </div>
 
     <div class="panel">
-      <h2>原文证据片段</h2>
+      <h2>Original Evidence Snippets</h2>
       <div id="evidence-b" class="evidence-box">
-        点击热力图单元格，查看对应媒体、实体或事件的原文证据。
+        Click a heatmap cell to view original evidence snippets for the corresponding outlet, entity, or event.
       </div>
     </div>
   </div>
@@ -389,10 +389,10 @@
             framingHeatmap: framingRows,
             eventMatrix: eventRows,
 
-            // 全局实体词云：全体媒体 × 实体
+            // Global entity word cloud: all outlets × entity
             entityContext: entityContext,
 
-            // 媒体专属词云：某媒体 × 某实体
+            // Outlet-specific word cloud: one outlet × one entity
             entityContextByOutlet: raw.entityContextByOutlet || {},
 
             examples: raw.examples || [],
@@ -407,8 +407,8 @@
 
         var configs = {
           attention: {
-            title: "Attention Bias / 媒体对实体的相对关注",
-            subtitle: "每一行按该媒体自身报道中的实体提及总量归一化，因此适合比较“该媒体更强调谁”，不适合直接比较不同媒体的总发稿量。",
+            title: "Attention Bias / Relative Attention to Key Entities",
+            subtitle: "Each row is normalized by the total number of target-entity mentions within the same outlet. Therefore, this view is useful for comparing which entities an outlet emphasizes, not for comparing total publication volume across outlets.",
             data: DATA.attentionHeatmap,
             keys: DATA.attentionKeys,
             type: "attention",
@@ -417,8 +417,8 @@
             }
           },
           framing: {
-            title: "Framing Bias / 关键实体的相对框架偏见",
-            subtitle: "数值表示相对框架偏离：小于 0 表示该媒体相比整体平均更负面地描述该实体；大于 0 表示相比整体平均更少负面或更偏正面；接近 0 表示接近整体平均或证据不足。",
+            title: "Framing Bias / Relative Framing Bias toward Key Entities",
+            subtitle: "Values indicate relative framing deviation: below 0 means the outlet describes the entity more negatively than the overall average; above 0 means less negatively or more positively than average; near 0 means close to the overall average or insufficient evidence.",
             data: DATA.framingHeatmap,
             keys: DATA.framingKeys,
             type: "diverging",
@@ -427,8 +427,8 @@
             }
           },
           event: {
-            title: "Event Bias / 关键事件的相对叙事偏见",
-            subtitle: "数值表示相对事件叙事偏离：小于 0 表示该媒体相比整体平均更负面地叙述该事件；大于 0 表示相比整体平均更少负面或更偏正面；接近 0 表示接近整体平均或证据不足。",
+            title: "Event Bias / Relative Narrative Bias toward Key Events",
+            subtitle: "Values indicate relative event-narrative deviation: below 0 means the outlet narrates the event more negatively than the overall average; above 0 means less negatively or more positively than average; near 0 means close to the overall average or insufficient evidence.",
             data: DATA.eventMatrix,
             keys: DATA.eventKeys,
             type: "diverging",
@@ -517,9 +517,9 @@
             host.append("div")
               .attr("class", "empty-state")
               .html(
-                "当前 <strong>" + mode + "</strong> 模式没有可用数据。<br>" +
-                "如果你现在使用的是旧版 task_b.json，这是正常的。旧数据通常只有 normalizedHeatmap 和 wordcloud，" +
-                "只能显示注意力偏见，不能显示框架偏见和事件叙事偏见。"
+                "No data is available for the <strong>" + mode + "</strong> mode.<br>" +
+                "If you are using an older task_b.json file, this is expected. Older data usually only contains normalizedHeatmap and wordcloud, " +
+                "which can only support the Attention Bias view."
               );
             return;
           }
@@ -527,23 +527,23 @@
           var hostEl = document.getElementById("heat-b");
           var W = hostEl.clientWidth || 900;
 
-          // 顶部空间给横轴标签；左边空间给媒体名
+          // Top margin for x-axis labels; left margin for outlet names.
           var m = { t: 78, r: 40, b: 40, l: 250 };
 
-          // 不同模式使用不同最小列宽，避免事件名被挤压
+          // Different modes use different minimum column widths to avoid label crowding.
           var minCellW = mode === "event" ? 170 : mode === "framing" ? 150 : 120;
           var cellW = Math.max(minCellW, (W - m.l - m.r) / keys.length);
 
           var cellH = 18;
           var innerW = cellW * keys.length;
 
-          // 整张图的真实宽度：左标签区 + 矩阵区 + 右边距
+          // Real chart width: left label area + matrix area + right margin.
           var chartW = m.l + innerW + m.r;
 
-          // SVG 宽度至少等于容器宽度，也至少等于图表真实宽度
+          // SVG width should be at least the container width and at least the real chart width.
           var svgW = Math.max(W, chartW);
 
-          // 关键：让整张图表区域在 SVG 里居中
+          // Center the full chart region inside the SVG.
           var xOffset = Math.max(0, (svgW - chartW) / 2);
 
           var H = m.t + m.b + cellH * rows.length;
@@ -715,8 +715,8 @@
             box.append("div")
               .attr("class", "empty-state")
               .html(
-                "没有找到 <strong>" + outlet + "</strong> 关于 <strong>" + key + "</strong> 的原文证据片段。<br>" +
-                "当前 task_b.json 中没有匹配该媒体和该实体/事件的原文片段。这可能是因为该组合出现次数较少，或预处理脚本没有为该组合保留 snippet。"
+                "No original evidence snippets were found for <strong>" + outlet + "</strong> and <strong>" + key + "</strong>.<br>" +
+                "This may be because this outlet-entity or outlet-event pair appears infrequently, or because the preprocessing script did not retain snippets for this pair."
               );
             return;
           }
@@ -817,16 +817,16 @@
 
           if (hasOutletCloud) {
             words = DATA.entityContextByOutlet[outlet][entity];
-            title = "实体上下文词云：" + outlet + " × " + entity;
+            title = "Entity Context Word Cloud: " + outlet + " × " + entity;
 
             var totalCount = d3.sum(words, function (d) {
               return +d.size || 0;
             });
 
             if (totalCount < 10) {
-              subtitle = "当前显示该媒体在描述该实体时使用的上下文词；样本较少，仅作为线索。总词频：" + totalCount;
+              subtitle = "This view shows the contextual words used by this outlet when describing this entity. The sample is small and should be treated as an exploratory clue. Total word frequency: " + totalCount;
             } else {
-              subtitle = "当前显示该媒体在描述该实体时使用的上下文高频词。总词频：" + totalCount;
+              subtitle = "This view shows high-frequency contextual words used by this outlet when describing this entity. Total word frequency: " + totalCount;
             }
           } else if (
             DATA.entityContext &&
@@ -836,19 +836,19 @@
             words = DATA.entityContext[entity];
 
             if (outlet) {
-              title = "实体上下文词云：" + outlet + " × " + entity + "（无专属词云，回退为全局）";
-              subtitle = "当前 JSON 中没有该媒体-实体组合的专属词云，因此显示全体媒体对该实体的上下文高频词。";
+              title = "Entity Context Word Cloud: " + outlet + " × " + entity + "（No outlet-specific cloud; using global view）";
+              subtitle = "No outlet-specific word cloud exists for this outlet-entity pair in the current JSON file, so the global entity context word cloud is shown instead.";
             } else {
-              title = "实体上下文词云：全体媒体 × " + entity;
-              subtitle = "当前显示全体媒体在描述该实体时使用的上下文高频词。";
+              title = "Entity Context Word Cloud: All Outlets × " + entity;
+              subtitle = "This view shows high-frequency contextual words used by all outlets when describing this entity.";
             }
           } else {
-            d3.select("#wc-title").text("实体上下文词云：暂无数据");
-            d3.select("#wc-subtitle").text("没有可显示的词云数据。");
+            d3.select("#wc-title").text("Entity Context Word Cloud: No Data");
+            d3.select("#wc-subtitle").text("No word cloud data is available for this combination.");
 
             host.append("div")
               .attr("class", "empty-state")
-              .text("暂无该组合的词云数据。");
+              .text("No word cloud data is available for this combination.");
 
             return;
           }
@@ -919,8 +919,8 @@
           .append("div")
           .attr("class", "empty-state")
           .html(
-            "数据加载失败：<strong>data/task_b.json</strong><br>" +
-            "请检查文件路径是否正确，或者浏览器控制台是否有跨域/本地文件访问限制。<br><br>" +
+            "Failed to load data: <strong>data/task_b.json</strong><br>" +
+            "Please check whether the file path is correct, or whether the browser console reports a CORS/local file access issue.<br><br>" +
             err.message
           );
       });
