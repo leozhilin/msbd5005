@@ -380,11 +380,13 @@
                 score: 0
               };
             });
-            entityContext = { All: mapped };
-            // generate_data.py only emits a corpus-wide word list; mirror it per entity
-            // so heatmap entity tabs and renderWordCloud(null, "POK") resolve data.
+            // Slim JSON only had a global list under legacy paths; duplicate to entity keys
+            // so renderWordCloud(null, "POK") etc. resolve (same list, exploratory fallback).
+            entityContext = { All: mapped.slice() };
             ["POK", "GAStech", "Government", "People"].forEach(function (k) {
-              entityContext[k] = mapped.slice();
+              entityContext[k] = mapped.map(function (x) {
+                return { text: x.text, size: x.size, score: x.score };
+              });
             });
           }
 
@@ -839,7 +841,7 @@
             words = DATA.entityContext[entity];
 
             if (outlet) {
-              title = "Entity Context Word Cloud: " + outlet + " × " + entity + "（No outlet-specific cloud; using global view）";
+              title = "Entity Context Word Cloud: " + outlet + " × " + entity + " (no outlet-specific cloud; using global view)";
               subtitle = "No outlet-specific word cloud exists for this outlet-entity pair in the current JSON file, so the global entity context word cloud is shown instead.";
             } else {
               title = "Entity Context Word Cloud: All Outlets × " + entity;
@@ -907,7 +909,7 @@
         initializeButtons();
         renderEntityControls();
         renderHeatmap("attention");
-        renderWordCloud(null, currentEntity);
+        renderWordCloud(null, "POK");
 
         window.addEventListener("resize", function () {
           renderHeatmap(currentMode);

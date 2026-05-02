@@ -378,12 +378,35 @@ if os.path.isdir(MC1):
 
 wordcloud = [{"text": t, "size": c} for t, c in wc.most_common(60)]
 
-with open(os.path.join(OUT, "task_b.json"), "w", encoding="utf-8") as f:
+task_b_payload = {
+    "normalizedHeatmap": rows,
+    "wordcloud": wordcloud,
+}
+
+path_b = os.path.join(OUT, "task_b.json")
+if os.path.isfile(path_b):
+    try:
+        with open(path_b, encoding="utf-8") as f:
+            prev_b = json.load(f)
+        for k in (
+            "attentionHeatmap",
+            "attentionKeys",
+            "entityContext",
+            "entityContextByOutlet",
+            "eventKeys",
+            "eventMatrix",
+            "examples",
+            "framingHeatmap",
+            "framingKeys",
+        ):
+            if k in prev_b:
+                task_b_payload[k] = prev_b[k]
+    except (OSError, ValueError, TypeError):
+        pass
+
+with open(path_b, "w", encoding="utf-8") as f:
     json.dump(
-        {
-            "normalizedHeatmap": rows,
-            "wordcloud": wordcloud,
-        },
+        task_b_payload,
         f,
         ensure_ascii=False,
         separators=(",", ":"),
