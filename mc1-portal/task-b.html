@@ -158,26 +158,22 @@
       color: #e1e7ed;
     }
 
-    #wc-b svg {
-      display: block;
-      width: 100%;
-      height: auto;
-      min-height: 280px;
-      max-height: 400px;
-    }
-
-    #wc-b svg text.wc-word {
-      font-family: var(--font-m), system-ui, sans-serif;
+    .wc-bubble {
+      display: inline-block;
+      margin: 6px 9px 6px 0;
+      line-height: 1.1;
       font-weight: 600;
       opacity: 0;
-      animation: wc-fade-in 0.55s ease forwards;
+      animation: wc-in 0.45s ease forwards;
     }
 
-    @keyframes wc-fade-in {
+    @keyframes wc-in {
       from {
+        transform: translateY(6px);
         opacity: 0;
       }
       to {
+        transform: translateY(0);
         opacity: 0.95;
       }
     }
@@ -283,7 +279,7 @@
       </p>
 
       <div class="control-row" id="entity-controls"></div>
-      <div class="viz-wrap" id="wc-b" style="min-height:320px; padding:1rem; overflow:visible"></div>
+      <div class="viz-wrap" id="wc-b" style="min-height:320px; padding:1rem; overflow:hidden"></div>
     </div>
 
     <div class="panel">
@@ -377,15 +373,19 @@
 
           var entityContext = raw.entityContext || {};
           if ((!entityContext || !Object.keys(entityContext).length) && raw.wordcloud) {
-            entityContext = {
-              All: raw.wordcloud.map(function (w) {
-                return {
-                  text: w.text,
-                  size: w.size,
-                  score: 0
-                };
-              })
-            };
+            var mapped = raw.wordcloud.map(function (w) {
+              return {
+                text: w.text,
+                size: w.size,
+                score: 0
+              };
+            });
+            entityContext = { All: mapped };
+            // generate_data.py only emits a corpus-wide word list; mirror it per entity
+            // so heatmap entity tabs and renderWordCloud(null, "POK") resolve data.
+            ["POK", "GAStech", "Government", "People"].forEach(function (k) {
+              entityContext[k] = mapped.slice();
+            });
           }
 
           return {
@@ -839,8 +839,8 @@
             words = DATA.entityContext[entity];
 
             if (outlet) {
-              title = "Entity Context Word Cloud: " + outlet + " × " + entity + " (global view)";
-              subtitle = "No outlet-specific word list exists for this pair in the current dataset; showing the global entity context cloud instead.";
+              title = "Entity Context Word Cloud: " + outlet + " × " + entity + "（No outlet-specific cloud; using global view）";
+              subtitle = "No outlet-specific word cloud exists for this outlet-entity pair in the current JSON file, so the global entity context word cloud is shown instead.";
             } else {
               title = "Entity Context Word Cloud: All Outlets × " + entity;
               subtitle = "This view shows high-frequency contextual words used by all outlets when describing this entity.";
@@ -867,100 +867,24 @@
             .domain([0, maxS])
             .range([12, 36]);
 
-          function wordColor(w) {
+          words.slice(0, 80).forEach(function (w, i) {
             var score = +w.score || 0;
-            if (score > 0) return d3.interpolateBlues(0.65);
-            if (score < 0) return d3.interpolateReds(0.65);
-            return "#9ab";
-          }
+            var color = "#9ab";
 
-          function rectsOverlap(a, b) {
-            return !(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y);
-          }
-
-          var wrapEl = host.node();
-          var W = Math.max(340, (wrapEl && wrapEl.clientWidth) || 560);
-          var H = Math.round(Math.min(400, Math.max(300, W * 0.52)));
-
-          var canvas = document.createElement("canvas");
-          var ctx = canvas.getContext("2d");
-          function textWidth(text, fontPx) {
-            ctx.font = "600 " + fontPx + "px " + (getComputedStyle(document.body).fontFamily || "system-ui, sans-serif");
-            return Math.min(W * 0.88, ctx.measureText(text).width + 6);
-          }
-
-          var svg = host.append("svg")
-            .attr("viewBox", "0 0 " + W + " " + H)
-            .attr("preserveAspectRatio", "xMidYMid meet");
-
-          var g = svg.append("g");
-
-          var list = words.slice(0, 80)
-            .map(function (w, i) {
-              return {
-                text: String(w.text || w.word || ""),
-                sizeVal: +w.size || 1,
-                score: +w.score || 0,
-                ord: i
-              };
-            })
-            .filter(function (d) {
-              return d.text.length > 0;
-            });
-
-          list.sort(function (a, b) {
-            return b.sizeVal - a.sizeVal || a.ord - b.ord;
-          });
-
-          var placed = [];
-          var pad = 4;
-          var margin = 8;
-          var cx = W / 2;
-          var cy = H / 2;
-
-          list.forEach(function (w, wi) {
-            var fontPx = Math.round(scale(w.sizeVal));
-            var tw = textWidth(w.text, fontPx);
-            var th = fontPx * 1.18;
-            var theta0 = wi * 2.399963229728647;
-            var maxK = 15000;
-            var found = false;
-            for (var k = 0; k < maxK && !found; k++) {
-              var theta = theta0 + k * 0.11;
-              var r = 0.45 * theta;
-              var px = cx + r * Math.cos(theta);
-              var py = cy + r * Math.sin(theta);
-              var rect = {
-                x: px - tw / 2 - pad,
-                y: py - th / 2 - pad,
-                w: tw + 2 * pad,
-                h: th + 2 * pad
-              };
-              if (rect.x < margin || rect.y < margin || rect.x + rect.w > W - margin || rect.y + rect.h > H - margin) {
-                continue;
-              }
-              var hit = false;
-              for (var j = 0; j < placed.length; j++) {
-                if (rectsOverlap(rect, placed[j])) {
-                  hit = true;
-                  break;
-                }
-              }
-              if (!hit) {
-                placed.push(rect);
-                found = true;
-                g.append("text")
-                  .attr("class", "wc-word")
-                  .attr("text-anchor", "middle")
-                  .attr("dominant-baseline", "middle")
-                  .attr("x", px)
-                  .attr("y", py)
-                  .attr("font-size", fontPx + "px")
-                  .attr("fill", wordColor(w))
-                  .style("animation-delay", (wi % 28) * 0.025 + "s")
-                  .text(w.text);
-              }
+            if (score > 0) {
+              color = d3.interpolateBlues(0.65);
+            } else if (score < 0) {
+              color = d3.interpolateReds(0.65);
             }
+
+            host.append("span")
+              .attr("class", "wc-bubble")
+              .style("font-size", scale(+w.size || 1) + "px")
+              .style("color", color)
+              .style("margin", "0 10px 10px 0")
+              .style("display", "inline-block")
+              .style("animation-delay", 0.02 * (i % 20) + "s")
+              .text(w.text || w.word || "");
           });
         }
 
@@ -983,7 +907,7 @@
         initializeButtons();
         renderEntityControls();
         renderHeatmap("attention");
-        renderWordCloud(null, "POK");
+        renderWordCloud(null, currentEntity);
 
         window.addEventListener("resize", function () {
           renderHeatmap(currentMode);
