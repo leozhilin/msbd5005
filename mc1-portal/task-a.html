@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>任务 A · 新闻源特征</title>
+  <title>Task A · News Source Characteristics</title>
   <link rel="stylesheet" href="css/cia-theme.css" />
   <script src="js/paths.js"></script>
   <script src="vendor/d3.v7.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/d3@7.9.0/dist/d3.min.js'"></script>
@@ -70,8 +70,8 @@
 </head>
 <body>
   <header class="site-nav">
-    <a href="index.html">← 总部</a>
-    <a href="archive.html">档案室</a>
+    <a href="index.html">← HQ</a>
+    <a href="archive.html">Archive</a>
     <span class="sep">|</span>
     <a href="task-a.html" class="active">A</a>
     <a href="task-b.html">B</a>
@@ -80,19 +80,19 @@
 
   <div class="container">
     <div class="intel-header">
-      <h1 class="dossier-h1">TASK A / 原始新闻源与传播线索</h1>
+      <h1 class="dossier-h1">TASK A / Original News Sources &amp; Information Flow</h1>
       <p class="mission-block" style="margin:0; border:0; padding:0">
-        基于 <code>MC1/News Articles</code> 原始文本抽取 <code>SOURCE / TITLE / PUBLISHED</code>：图1 给出新闻源分类表，图2 展示推断信息流有向网络（可交互），图3 为主题相似度热力图。
+        Based on <code>MC1/News Articles</code> raw text extraction of <code>SOURCE / TITLE / PUBLISHED</code>: Figure 1 presents a news source classification table, Figure 2 shows an inferred information flow network (interactive), and Figure 3 displays a topic similarity heatmap.
       </p>
     </div>
 
     <!-- ── Figure 1 ── -->
     <div class="panel">
-      <h2>图 1：新闻源分类表</h2>
+      <h2>Figure 1: News Source Classification</h2>
       <div style="display:flex;gap:18px;align-items:center;margin-bottom:8px;font-size:12px;flex-wrap:wrap">
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#2563EB;display:inline-block"></span> <b>Primary</b> — 原创报道源（独家采编）</span>
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#F59E0B;display:inline-block"></span> <b>Mixed</b> — 混合型（既有原创也有转载）</span>
-        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#DC2626;display:inline-block"></span> <b>Derivative</b> — 转载/二次报道源</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#2563EB;display:inline-block"></span> <b>Primary</b> — Original reporting sources (exclusive coverage)</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#F59E0B;display:inline-block"></span> <b>Mixed</b> — Both original and republished content</span>
+        <span style="display:inline-flex;align-items:center;gap:4px"><span style="width:12px;height:12px;border-radius:2px;background:#DC2626;display:inline-block"></span> <b>Derivative</b> — Republished / secondary reporting sources</span>
       </div>
       <div class="viz-wrap" style="min-height:auto; padding:0; overflow-x:auto">
         <table class="fig1-table" id="fig1-table">
@@ -109,16 +109,16 @@
 
     <!-- ── Figure 2 ── -->
     <div class="panel">
-      <h2>图 2：推断信息流网络（交互）</h2>
+      <h2>Figure 2: Inferred Information Flow Network (Interactive)</h2>
       <p style="font-size:12px;color:var(--dim);margin-bottom:6px">
-        点击任意节点高亮其连接。连线表示 Primary 与 Derivative 之间的推断信息流关系（基于内容相似度 + ≤14天时间窗口）。连线越粗 = 推断匹配文章数越多。
+        Click any node to highlight its connections. Lines represent inferred information flow between Primary and Derivative sources (based on content similarity + ≤14-day temporal window). Thicker lines = more inferred matched articles.
       </p>
       <div class="fig2-wrap" id="fig2-wrap">
         <svg id="fig2-svg"></svg>
-        <div class="fig2-hint" id="fig2-hint">点击节点探索连接</div>
+        <div class="fig2-hint" id="fig2-hint">Click a node to explore connections</div>
         <div class="fig2-sidebar" id="fig2-sidebar">
           <h3>Node Info</h3>
-          <p style="color:var(--dim);font-size:11px">点击节点查看详情</p>
+          <p style="color:var(--dim);font-size:11px">Click a node to view details</p>
           <div id="fig2-info"></div>
           <div id="fig2-conn"></div>
           <div class="fig2-legend">
@@ -136,9 +136,9 @@
 
     <!-- ── Figure 3 ── -->
     <div class="panel">
-      <h2>图 3：主题相似度热力图</h2>
+      <h2>Figure 3: Topic Similarity Heatmap</h2>
       <p style="font-size:12px;color:var(--dim);margin-bottom:6px">
-        基于 TF-IDF + 余弦相似度的 outlet 两两比较。仅显示下三角，对角线已遮蔽。每组内按相似度聚类排序。蓝色虚线框 = Primary-Derivative 跨块区域。
+        Pairwise outlet comparison based on TF-IDF + cosine similarity. Only the lower triangle is shown; the diagonal is masked. Outlets within each group are sorted by similarity clustering. Blue dashed boxes indicate cross-block Primary-Derivative regions.
       </p>
       <div class="viz-wrap" style="min-height:auto; padding:8px; text-align:center">
         <img class="fig3-img" id="fig3-img" alt="Similarity Heatmap" />
@@ -155,10 +155,10 @@
       var st = D.stats || {};
       document.getElementById("cap-a").textContent =
         (D.methodNote || "") +
-        " | 总文章: " + (st.totalArticles || 0) +
-        "；有日期: " + (st.datedArticles || 0) +
-        "；网络节点: " + (st.networkNodes || 0) +
-        "；网络边: " + (st.networkLinks || 0);
+        " | Total articles: " + (st.totalArticles || 0) +
+        "; Dated: " + (st.datedArticles || 0) +
+        "; Network nodes: " + (st.networkNodes || 0) +
+        "; Network links: " + (st.networkLinks || 0);
 
       // ══════════════════════════════════════════
       // FIGURE 1: Source Classification Table
